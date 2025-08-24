@@ -1,0 +1,106 @@
+[2025-08-24 15:45:32] 🔧 Initialisation configuration agents...
+[2025-08-24 15:45:32] ✅ Configuration agents initialisée
+[2025-08-24 15:45:34] 🔍 Vérification nouvelles épics...
+[2025-08-24 15:45:37] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-24 15:45:37] 📊 1 issues trouvées au total
+[2025-08-24 15:45:37] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-24 15:45:37] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-24 15:47:11] 🔍 Vérification nouvelles épics...
+[2025-08-24 15:47:13] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-24 15:47:13] 📊 1 issues trouvées au total
+[2025-08-24 15:47:13] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-24 15:47:13] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-24 15:49:20] 📄 Résultat analyse Tech Lead reçu
+[2025-08-24 15:49:20] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-24 15:55:23] 🔍 Vérification nouvelles épics...
+[2025-08-24 15:55:25] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-24 15:55:26] 📊 1 issues trouvées au total
+[2025-08-24 15:55:26] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-24 15:55:26] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-24 15:57:48] 📄 Résultat analyse Tech Lead reçu
+[2025-08-24 15:57:48] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-24 16:52:20] 🔧 Initialisation configuration agents...
+[2025-08-24 16:52:20] ✅ Configuration agents initialisée
+[2025-08-24 16:56:06] 🚀 Démarrage cycle complet orchestrateur Dulien
+[2025-08-24 16:56:06] 🔍 Vérification nouvelles épics...
+[2025-08-24 16:56:08] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-24 16:56:08] 📊 1 issues trouvées au total
+[2025-08-24 16:56:08] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-24 16:56:08] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-24 16:57:45] 📄 Résultat analyse Tech Lead reçu
+[2025-08-24 16:57:45] ❌ Échec extraction JSON avec toutes les méthodes
+[2025-08-24 16:57:45] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-24 16:57:48] ✅ Cycle terminé
+[2025-08-24 17:00:37] 🔍 Vérification nouvelles épics...
+[2025-08-24 17:00:39] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-24 17:00:39] 📊 1 issues trouvées au total
+[2025-08-24 17:00:39] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-24 17:00:39] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-24 17:02:23] 📄 Résultat analyse Tech Lead reçu
+[2025-08-24 17:02:23] 📝 Workflow mis à jour pour épic #1
+[2025-08-24 17:02:33] ⚙️ Vérification tâches en attente...
+[2025-08-24 17:02:33] 🚀 Exécution tâche webapp-1
+[2025-08-24 17:02:33] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 17:19:27] 🔍 Vérification nouvelles épics...
+[2025-08-24 17:19:29] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-24 17:19:29] 📊 2 issues trouvées au total
+[2025-08-24 17:19:29] 📋 Nouvelle épic détectée: #2 - [EPIC] Test Orchestrateur - Ajout bouton simple
+[2025-08-24 17:19:29] 🤖 Démarrage analyse Tech Lead pour épic #2
+[2025-08-24 17:20:12] 📄 Résultat analyse Tech Lead reçu
+[2025-08-24 17:20:12] 📝 Workflow mis à jour pour épic #2
+[2025-08-24 17:20:19] ⚙️ Vérification tâches en attente...
+[2025-08-24 17:20:19] 🚀 Exécution tâche webapp-1
+[2025-08-24 17:20:19] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 17:28:55] ⚙️ Vérification tâches en attente...
+[2025-08-24 17:28:55] 🚀 Exécution tâche webapp-1
+[2025-08-24 17:28:55] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 17:35:25] ⚙️ Vérification tâches en attente...
+[2025-08-24 17:35:25] 🚀 Exécution tâche webapp-1
+[2025-08-24 17:35:25] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 17:36:24] 📄 Webapp Agent terminé pour webapp-1
+[2025-08-24 17:36:24] ✅ Tâche webapp-1 marquée comme review_requested
+[2025-08-24 17:36:25] 🚀 Exécution tâche webapp-1
+[2025-08-24 17:36:25] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 17:37:22] 📄 Webapp Agent terminé pour webapp-1
+[2025-08-24 17:37:22] ✅ Tâche webapp-1 marquée comme review_requested
+[2025-08-24 17:40:46] 🔍 Vérification nouvelles épics...
+[2025-08-24 17:40:48] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-24 17:40:48] 📊 3 issues trouvées au total
+[2025-08-24 17:40:48] 📋 Nouvelle épic détectée: #3 - [EPIC] Test Final - Composant alerte simple
+[2025-08-24 17:40:48] 🤖 Démarrage analyse Tech Lead pour épic #3
+[2025-08-24 17:41:49] 📄 Résultat analyse Tech Lead reçu
+[2025-08-24 17:41:49] 📝 Workflow mis à jour pour épic #3
+[2025-08-24 17:42:12] ⚙️ Vérification tâches en attente...
+[2025-08-24 17:42:12] 🚀 Exécution tâche webapp-1
+[2025-08-24 17:42:12] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 21:20:39] ⚙️ Vérification tâches en attente...
+[2025-08-24 21:20:39] 🚀 Exécution tâche webapp-1
+[2025-08-24 21:20:39] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 21:41:25] ⚙️ Vérification tâches en attente...
+[2025-08-24 21:41:25] 🚀 Exécution tâche webapp-1
+[2025-08-24 21:41:25] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 22:00:47] ⚙️ Vérification tâches en attente...
+[2025-08-24 22:00:47] 🚀 Exécution tâche webapp-1
+[2025-08-24 22:00:47] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 22:07:32] 🚀 Démarrage cycle complet orchestrateur Dulien
+[2025-08-24 22:07:32] 🔍 Vérification nouvelles épics...
+[2025-08-24 22:07:33] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-24 22:07:34] 📊 3 issues trouvées au total
+[2025-08-24 22:07:34] 📋 Nouvelle épic détectée: #3 - [EPIC] Test Final - Composant alerte simple
+[2025-08-24 22:07:34] 🤖 Démarrage analyse Tech Lead pour épic #3
+[2025-08-24 22:09:31] 📄 Résultat analyse Tech Lead reçu
+[2025-08-24 22:09:31] 📝 Workflow mis à jour pour épic #3
+[2025-08-24 22:09:37] ⚙️ Vérification tâches en attente...
+[2025-08-24 22:09:37] 🚀 Exécution tâche webapp-1
+[2025-08-24 22:09:37] 🤖 Démarrage agent webapp pour tâche webapp#1
+[2025-08-24 22:11:50] 🔍 Vérification PRs prêtes pour review...
+[2025-08-24 22:11:50] 🔍 Vérification PR pour tâche webapp-1
+[2025-08-24 22:11:50] 🔍 Vérification PR pour tâche webapp-1
+[2025-08-24 22:12:08] 🔍 Vérification PRs prêtes pour review...
+[2025-08-24 22:12:08] 🔍 Vérification PR pour tâche webapp-1
+[2025-08-24 22:12:08] 📋 PR #3 trouvée pour webapp-1 - Déclenchement review
+[2025-08-24 22:12:08] 🚀 Déclenchement agents review pour PR #3
+[2025-08-24 22:12:08] 🔒 Security Agent - Review PR #3
+[2025-08-24 22:13:05] 🔒 Security review terminée pour PR #3
+[2025-08-24 22:13:05] ♿ RGAA Agent - Review accessibilité PR #3
+[2025-08-24 22:15:34] 🔍 Vérification reviews terminées...

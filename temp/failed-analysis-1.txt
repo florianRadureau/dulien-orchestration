@@ -1,0 +1,1 @@
+**Note:** Pour créer effectivement les issues dans GitHub, j'ai besoin de votre autorisation pour utiliser l'outil `mcp__github__create_issue`. Une fois autorisé, je pourrai créer l'issue avec un numéro réel au lieu de "TBD-1".

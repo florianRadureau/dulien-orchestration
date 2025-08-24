@@ -1,0 +1,61 @@
+{
+  "epics": {
+    "1": {
+      "analysis": "Ajout de placeholders visuels cohérents sur la page d'accueil pour les sections vides (mentors, rendez-vous, actualités, articles). Impact uniquement sur la webapp Angular avec réutilisation du pattern existant des formations recommandées.",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 1,
+          "title": "[HOME] Ajouter des placeholders cohérents pour les sections vides",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-1",
+          "depends_on": [],
+          "priority": 1,
+          "status": "review_requested"
+        }
+      ]
+    },
+    "2": {
+      "analysis": "Epic de test simple pour valider le workflow orchestrateur. Implémentation d'un composant Angular bouton-test minimal avec template, styles et test unitaire Jest. Aucune interaction backend requise, uniquement côté frontend webapp.",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 1,
+          "title": "[TEST] Créer composant bouton-test Angular",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-1",
+          "depends_on": [],
+          "priority": 1,
+          "status": "review_requested"
+        }
+      ]
+    },
+    "3": {
+      "analysis": "Création d'un composant Angular simple d'alerte pour tester le workflow orchestrateur complet. Le composant doit être autonome, avec message fixe 'Alerte Orchestrateur', bouton de fermeture et tests unitaires complets. Impact uniquement sur la webapp Angular.",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 1,
+          "title": "[FEAT] Créer composant alerte-test avec tests unitaires",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-1",
+          "depends_on": [],
+          "priority": 1,
+          "status": "under_review"
+        }
+      ]
+    }
+  }
+}
