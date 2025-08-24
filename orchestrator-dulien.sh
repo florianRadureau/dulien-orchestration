@@ -395,12 +395,18 @@ trigger_review_agents() {
     log "🚀 Déclenchement agents review pour PR #$pr_number"
     
     # Déclencher Security Agent
-    execute_security_review "$repo" "$pr_number" "$task_id"
+    execute_security_review "$repo" "$pr_number" "$task_id" &
+    
+    # Déclencher Tech Lead Review Agent
+    execute_tech_lead_review "$repo" "$pr_number" "$task_id" &
     
     # Si webapp, déclencher aussi RGAA Agent  
     if [ "$repo" = "webapp" ]; then
-        execute_rgaa_review "$repo" "$pr_number" "$task_id"
+        execute_rgaa_review "$repo" "$pr_number" "$task_id" &
     fi
+    
+    # Attendre que tous les agents terminent
+    wait
 }
 
 # === EXÉCUTION TÂCHES ===
@@ -780,6 +786,48 @@ FORMAT RAPPORT:
     echo "$SECURITY_RESULT" >> "$WORK_DIR/logs/security-reviews.log"
 }
 
+execute_tech_lead_review() {
+    local repo="$1"
+    local pr_number="$2" 
+    local task_id="$3"
+    
+    log "👔 Tech Lead Agent - Review technique PR #$pr_number"
+    
+    TECH_LEAD_REVIEW_PROMPT="REVIEW TECHNIQUE TECH LEAD
+
+MISSION: Review technique approfondie PR mentorize-app/$repo #$pr_number
+
+ACTIONS:
+1. Utilise Bash: gh pr view $pr_number --repo mentorize-app/$repo --json files
+2. Analyse qualité code: architecture, patterns, conventions
+3. Vérifie conformité Angular 20, signals, control flow moderne
+4. Contrôle tests unitaires, performance, maintenabilité
+5. Poste rapport: gh pr comment $pr_number --repo mentorize-app/$repo --body \"RAPPORT\"
+
+FORMAT RAPPORT:
+# 👔 Tech Lead Review - Analyse Technique
+## ✅ Conformité Technique: [points validés]
+## 🏗️ Architecture: [évaluation structure]
+## 🧪 Tests & Qualité: [couverture et pertinence]
+## ⚠️ Améliorations: [si nécessaire]
+## 📊 Score Technique: X/10
+*Review technique par Tech Lead Agent Dulien*"
+
+    # Récupérer token et exécuter
+    if [ -z "$GITHUB_TOKEN" ]; then
+        export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
+    fi
+    
+    TECH_LEAD_RESULT=$(echo "$TECH_LEAD_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
+        --mcp-config "$AGENTS_DIR/tech-lead.json" \
+        --append-system-prompt "Tu es le Tech Lead Agent spécialisé qualité code. Tu postes des reviews techniques approfondies." \
+        --add-dir "/home/florian/projets/$repo" \
+        --allowed-tools "Read,Bash")
+    
+    log "👔 Tech Lead review terminée pour PR #$pr_number"
+    echo "$TECH_LEAD_RESULT" >> "$WORK_DIR/logs/tech-lead-reviews.log"
+}
+
 execute_rgaa_review() {
     local repo="$1"
     local pr_number="$2"
@@ -847,22 +895,42 @@ check_completed_reviews() {
         PR_NUMBER=$(gh pr list --repo mentorize-app/$REPO --state open --json number,headRefName --jq '.[] | select(.headRefName | contains("'$TASK_ID'") or contains("alerte-test") or contains("bouton-test")) | .number' | head -1)
         
         if [ -n "$PR_NUMBER" ]; then
-            # Compter commentaires de review
-            SECURITY_REVIEWS=$(gh api repos/mentorize-app/$REPO/pulls/$PR_NUMBER/comments --jq '[.[] | select(.body | contains("Security Review"))] | length')
-            RGAA_REVIEWS=$(gh api repos/mentorize-app/$REPO/pulls/$PR_NUMBER/comments --jq '[.[] | select(.body | contains("RGAA Review"))] | length')
+            # Compter commentaires de review via gh pr view
+            PR_COMMENTS=$(gh pr view $PR_NUMBER --repo mentorize-app/$REPO --comments)
+            SECURITY_REVIEWS=$(echo "$PR_COMMENTS" | grep -c "Security Review Automatique" || echo "0")
+            TECH_LEAD_REVIEWS=$(echo "$PR_COMMENTS" | grep -c "Tech Lead Review" || echo "0")
+            RGAA_REVIEWS=$(echo "$PR_COMMENTS" | grep -c "RGAA Review Automatique" || echo "0")
             
-            # Si reviews présentes, marquer comme prêt à merge
-            if [ "$SECURITY_REVIEWS" -gt 0 ] && ([ "$REPO" != "webapp" ] || [ "$RGAA_REVIEWS" -gt 0 ]); then
+            # Vérifier si toutes les reviews requises sont présentes
+            REQUIRED_REVIEWS_COUNT=2  # Security + Tech Lead
+            if [ "$REPO" = "webapp" ]; then
+                REQUIRED_REVIEWS_COUNT=3  # Security + Tech Lead + RGAA
+            fi
+            
+            COMPLETED_REVIEWS=$((SECURITY_REVIEWS + TECH_LEAD_REVIEWS + RGAA_REVIEWS))
+            
+            # Si toutes reviews présentes, marquer comme prêt à merge
+            if [ "$COMPLETED_REVIEWS" -ge "$REQUIRED_REVIEWS_COUNT" ]; then
                 log "✅ Reviews complètes pour $TASK_ID - Prêt à merge"
                 mark_task_status "$TASK_ID" "ready_to_merge"
                 
                 # Commentaire final sur l'issue
+                # Construire message selon les reviews effectuées
+                REVIEW_MESSAGE="✅ Code développé par Webapp Agent\n✅ PR créée: #$PR_NUMBER\n"
+                
+                if [ "$SECURITY_REVIEWS" -gt 0 ]; then
+                    REVIEW_MESSAGE="${REVIEW_MESSAGE}✅ Review sécurité terminée\n"
+                fi
+                if [ "$TECH_LEAD_REVIEWS" -gt 0 ]; then
+                    REVIEW_MESSAGE="${REVIEW_MESSAGE}✅ Review technique Tech Lead terminée\n"
+                fi
+                if [ "$RGAA_REVIEWS" -gt 0 ]; then
+                    REVIEW_MESSAGE="${REVIEW_MESSAGE}✅ Review accessibilité RGAA terminée\n"
+                fi
+                
                 gh issue comment "$ISSUE" --repo "mentorize-app/$REPO" --body "🎉 **Développement Terminé**
 
-✅ Code développé par Webapp Agent
-✅ PR créée: #$PR_NUMBER
-✅ Reviews sécurité et accessibilité complètes
-
+${REVIEW_MESSAGE}
 **PR prête à être mergée manuellement.**
 
 ---
