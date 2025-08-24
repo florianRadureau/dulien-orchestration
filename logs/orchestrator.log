@@ -134,3 +134,73 @@
 [2025-08-24 22:29:49] 🔄 Statut webapp-1 mis à jour: ready_to_merge
 [2025-08-24 22:29:52] ✅ Reviews complètes pour webapp-1 - Prêt à merge
 [2025-08-24 22:29:52] 🔄 Statut webapp-1 mis à jour: ready_to_merge
+[2025-08-24 22:46:55] 💬 Vérification mentions dans commentaires PR...
+[2025-08-24 22:46:56] 🔍 Scan mentions PR mentorize-app/webapp #3
+[2025-08-24 22:46:57] 💬 Mention détectée: @webapp → '@webapp supprime auth.interceptor.spec.ts'
+[2025-08-24 22:46:57] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:46:58] ✅ Issue créée: 
+[2025-08-24 22:48:55] 💬 Vérification mentions dans commentaires PR...
+[2025-08-24 22:48:56] 🔍 Scan mentions PR mentorize-app/webapp #3
+[2025-08-24 22:48:58] 💬 Mention détectée: @webapp → '@webapp supprime auth.interceptor.spec.ts'
+[2025-08-24 22:48:58] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:48:59] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/5
+[2025-08-24 22:48:59] 📝 Mention ajoutée au workflow: mention-1756068539
+[2025-08-24 22:49:01] 🔍 Scan mentions PR mentorize-app/webapp #3
+[2025-08-24 22:49:02] 💬 Mention détectée: @webapp → '@webapp supprime auth.interceptor.spec.ts'
+[2025-08-24 22:49:02] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:03] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/6
+[2025-08-24 22:49:03] 📝 Mention ajoutée au workflow: mention-1756068543
+[2025-08-24 22:49:05] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:05] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:06] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/7
+[2025-08-24 22:49:06] 📝 Mention ajoutée au workflow: mention-1756068546
+[2025-08-24 22:49:10] 🔍 Scan mentions PR mentorize-app/webapp #3
+[2025-08-24 22:49:11] 💬 Mention détectée: @webapp → '@webapp supprime auth.interceptor.spec.ts'
+[2025-08-24 22:49:11] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:13] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/8
+[2025-08-24 22:49:13] 📝 Mention ajoutée au workflow: mention-1756068553
+[2025-08-24 22:49:14] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:14] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:15] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/9
+[2025-08-24 22:49:15] 📝 Mention ajoutée au workflow: mention-1756068555
+[2025-08-24 22:49:17] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:17] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:18] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/10
+[2025-08-24 22:49:18] 📝 Mention ajoutée au workflow: mention-1756068558
+[2025-08-24 22:49:19] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:19] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:26] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/11
+[2025-08-24 22:49:26] 📝 Mention ajoutée au workflow: mention-1756068566
+[2025-08-24 22:49:28] 🔍 Scan mentions PR mentorize-app/webapp #3
+[2025-08-24 22:49:29] 💬 Mention détectée: @webapp → '@webapp supprime auth.interceptor.spec.ts'
+[2025-08-24 22:49:29] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:30] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/12
+[2025-08-24 22:49:30] 📝 Mention ajoutée au workflow: mention-1756068570
+[2025-08-24 22:49:31] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:31] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:33] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/13
+[2025-08-24 22:49:33] 📝 Mention ajoutée au workflow: mention-1756068573
+[2025-08-24 22:49:34] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:34] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:35] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/14
+[2025-08-24 22:49:35] 📝 Mention ajoutée au workflow: mention-1756068575
+[2025-08-24 22:49:36] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:36] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:37] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/15
+[2025-08-24 22:49:37] 📝 Mention ajoutée au workflow: mention-1756068577
+[2025-08-24 22:49:38] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:38] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:39] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/16
+[2025-08-24 22:49:39] 📝 Mention ajoutée au workflow: mention-1756068579
+[2025-08-24 22:49:41] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:41] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:41] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/17
+[2025-08-24 22:49:42] 📝 Mention ajoutée au workflow: mention-1756068581
+[2025-08-24 22:49:42] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:42] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:44] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/18
+[2025-08-24 22:49:44] 📝 Mention ajoutée au workflow: mention-1756068584
+[2025-08-24 22:49:45] 💬 Mention détectée: @webapp → '@webapp'
+[2025-08-24 22:49:45] 🎯 Création tâche mention: @webapp dans webapp
+[2025-08-24 22:49:46] ✅ Issue créée: https://github.com/mentorize-app/webapp/issues/19
+[2025-08-24 22:49:46] 📝 Mention ajoutée au workflow: mention-1756068586

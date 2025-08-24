@@ -11,6 +11,14 @@ LOG_FILE="$WORK_DIR/logs/orchestrator.log"
 ORG="mentorize-app"
 REPO="infrastructure"
 
+# GitHub App Authentication
+source "$WORK_DIR/github-auth.sh"
+
+get_github_token() {
+    # Utiliser GitHub App au lieu du token personnel
+    get_installation_token
+}
+
 # Créer structure si nécessaire
 mkdir -p "$WORK_DIR"/{agents,logs,temp}
 
@@ -411,6 +419,66 @@ trigger_review_agents() {
 
 # === EXÉCUTION TÂCHES ===
 
+execute_mention_tasks() {
+    if [ ! -f "$WORKFLOW_FILE" ]; then
+        return 0
+    fi
+    
+    log "💬 Vérification tâches mention en attente..."
+    
+    # Chercher tâches mention prêtes à exécuter
+    MENTION_TASKS=$(jq -r '
+        .epics | to_entries | .[] | 
+        .value.tasks_created[] as $task |
+        .value.workflow[] | 
+        select(.task_id == ($task.repo + "-" + ($task.issue_number | tostring))) |
+        select(.status == "mention_triggered") |
+        {task_id: .task_id, repo: $task.repo, issue: $task.issue_number, agent: $task.agent}
+    ' "$WORKFLOW_FILE")
+    
+    if [ -z "$MENTION_TASKS" ]; then
+        return 0
+    fi
+    
+    echo "$MENTION_TASKS" | jq -c '.' | while read -r task; do
+        TASK_ID=$(echo "$task" | jq -r '.task_id')
+        REPO=$(echo "$task" | jq -r '.repo') 
+        ISSUE=$(echo "$task" | jq -r '.issue')
+        AGENT=$(echo "$task" | jq -r '.agent')
+        
+        log "🚀 Exécution tâche mention $TASK_ID"
+        
+        # Récupérer détails de la tâche depuis GitHub
+        TASK_DATA=$(gh issue view "$ISSUE" --repo "mentorize-app/$REPO" --json title,body 2>/dev/null)
+        
+        if [ -n "$TASK_DATA" ]; then
+            case "$AGENT" in
+                "webapp")
+                    execute_webapp_agent "$REPO" "$ISSUE" "$TASK_DATA" "$TASK_ID"
+                    ;;
+                "tenant-api")
+                    execute_tenant_api_agent "$REPO" "$ISSUE" "$TASK_DATA" "$TASK_ID"
+                    ;;
+                "referencial")
+                    execute_referencial_agent "$REPO" "$ISSUE" "$TASK_DATA" "$TASK_ID"
+                    ;;
+                "infrastructure")
+                    execute_infrastructure_agent "$REPO" "$ISSUE" "$TASK_DATA" "$TASK_ID"
+                    ;;
+                "mail-server")
+                    execute_mail_server_agent "$REPO" "$ISSUE" "$TASK_DATA" "$TASK_ID"
+                    ;;
+                "landing-page")
+                    execute_landing_page_agent "$REPO" "$ISSUE" "$TASK_DATA" "$TASK_ID"
+                    ;;
+                *)
+                    log "⚠️ Agent mention $AGENT non supporté pour exécution"
+                    ;;
+            esac
+        fi
+    done
+}
+
 execute_pending_tasks() {
     if [ ! -f "$WORKFLOW_FILE" ]; then
         return 0
@@ -507,17 +575,15 @@ execute_webapp_agent() {
 
 IMPORTANT: Utilise l'outil Bash pour créer la PR, pas MCP GitHub."
 
-    # Récupérer le token GitHub
-    if [ -z "$GITHUB_TOKEN" ]; then
-        export GITHUB_TOKEN=$(gh auth token 2>/dev/null || echo "")
-        if [ -z "$GITHUB_TOKEN" ]; then
-            log "❌ Impossible de récupérer GITHUB_TOKEN"
-            return 1
-        fi
+    # Récupérer le token GitHub App
+    local github_token=$(get_github_token)
+    if [ -z "$github_token" ]; then
+        log "❌ Impossible de récupérer token GitHub App"
+        return 1
     fi
     
-    # Exécuter Webapp Agent avec token d'environnement
-    WEBAPP_RESULT=$(echo "$WEBAPP_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
+    # Exécuter Webapp Agent avec token GitHub App
+    WEBAPP_RESULT=$(echo "$WEBAPP_PROMPT" | GITHUB_TOKEN="$github_token" claude --print \
         --mcp-config "$AGENTS_DIR/webapp.json" \
         --append-system-prompt "Tu es le Webapp Agent Dulien spécialisé Angular/TypeScript. Tu développes des interfaces utilisateur accessibles et performantes." \
         --add-dir "/home/florian/projets/webapp" \
@@ -863,6 +929,197 @@ FORMAT RAPPORT:
     echo "$RGAA_RESULT" >> "$WORK_DIR/logs/rgaa-reviews.log"
 }
 
+# === SYSTÈME DE MENTIONS INTERACTIVES ===
+
+# Mapping agents vers repositories
+declare -A AGENT_REPOS=(
+    ["webapp"]="webapp"
+    ["tenant-api"]="tenant-specific-api" 
+    ["referencial"]="referencial"
+    ["infrastructure"]="infrastructure"
+    ["mail-server"]="mail-server"
+    ["landing-page"]="landing-page"
+    ["security"]="webapp"  # Reviews postées sur webapp mais peuvent créer tâches ailleurs
+    ["tech-lead"]="webapp"
+    ["rgaa"]="webapp"
+)
+
+check_pr_mentions() {
+    log "💬 Vérification mentions dans commentaires PR..."
+    
+    # Scanner toutes les PRs ouvertes sur tous les repos
+    for agent in "${!AGENT_REPOS[@]}"; do
+        local repo="${AGENT_REPOS[$agent]}"
+        
+        # Récupérer PRs ouvertes pour ce repo
+        local open_prs=$(gh pr list --repo mentorize-app/$repo --state open --json number,title 2>/dev/null || echo "[]")
+        
+        if [ "$open_prs" != "[]" ]; then
+            echo "$open_prs" | jq -c '.[]' | while read -r pr; do
+                local pr_number=$(echo "$pr" | jq -r '.number')
+                local pr_title=$(echo "$pr" | jq -r '.title')
+                
+                log "🔍 Scan mentions PR mentorize-app/$repo #$pr_number"
+                
+                # Récupérer commentaires de la PR
+                local pr_comments=$(gh pr view $pr_number --repo mentorize-app/$repo --comments 2>/dev/null || echo "")
+                
+                if [ -n "$pr_comments" ]; then
+                    # Détecter mentions avec pattern: @agent action description
+                    echo "$pr_comments" | grep -Eo "@(webapp|tenant-api|referencial|infrastructure|mail-server|landing-page|security|tech-lead|rgaa)\s+[^@]*" | while read -r mention; do
+                        process_mention "$mention" "$repo" "$pr_number" "$pr_title"
+                    done
+                fi
+            done
+        fi
+    done
+}
+
+process_mention() {
+    local mention="$1"
+    local source_repo="$2"  
+    local source_pr="$3"
+    local pr_title="$4"
+    
+    # Parser la mention: @agent action description
+    local mentioned_agent=$(echo "$mention" | grep -Eo "@[a-z-]+" | sed 's/@//')
+    local action_text=$(echo "$mention" | sed 's/@[a-z-]+\s*//')
+    
+    log "💬 Mention détectée: @$mentioned_agent → '$action_text'"
+    
+    # Déterminer le repository cible
+    local target_repo="${AGENT_REPOS[$mentioned_agent]}"
+    if [ -z "$target_repo" ]; then
+        log "❌ Agent @$mentioned_agent inconnu"
+        return 1
+    fi
+    
+    # Créer la tâche automatiquement
+    create_mention_task "$mentioned_agent" "$target_repo" "$action_text" "$source_repo" "$source_pr" "$pr_title"
+}
+
+create_mention_task() {
+    local agent="$1"
+    local target_repo="$2" 
+    local action_text="$3"
+    local source_repo="$4"
+    local source_pr="$5"
+    local pr_title="$6"
+    
+    log "🎯 Création tâche mention: @$agent dans $target_repo"
+    
+    # Générer template selon l'agent
+    local task_template
+    case "$agent" in
+        "webapp")
+            task_template="[WEBAPP-MENTION] Interface utilisateur Angular"
+            ;;
+        "tenant-api")
+            task_template="[API-MENTION] Backend tenant et business logic"
+            ;;
+        "referencial")
+            task_template="[REF-MENTION] API référentiel données partagées"
+            ;;
+        "infrastructure")
+            task_template="[INFRA-MENTION] DevOps et infrastructure"
+            ;;
+        "mail-server")
+            task_template="[MAIL-MENTION] Service messagerie et notifications"
+            ;;
+        "landing-page")
+            task_template="[LANDING-MENTION] Pages marketing et SEO"
+            ;;
+        "security"|"tech-lead"|"rgaa")
+            task_template="[REVIEW-MENTION] Suivi de recommandation review"
+            ;;
+    esac
+    
+    # Corps de l'issue avec référence
+    local issue_body="🎯 **Tâche créée par mention interactive**
+
+**Action demandée:** $action_text
+
+**Contexte:**
+- Mentionné dans PR mentorize-app/$source_repo #$source_pr
+- Titre PR: \"$pr_title\"
+- Agent cible: @$agent
+
+**Instructions:**
+$action_text
+
+---
+*Tâche générée automatiquement par système de mentions Dulien*
+*Agent assigné: @$agent*"
+
+    # Créer l'issue GitHub
+    local new_issue=$(gh issue create \
+        --repo "mentorize-app/$target_repo" \
+        --title "$task_template: ${action_text:0:50}..." \
+        --body "$issue_body" 2>/dev/null)
+    
+    if [ $? -eq 0 ]; then
+        log "✅ Issue créée: $new_issue"
+        
+        # Ajouter au workflow JSON
+        add_mention_to_workflow "$agent" "$target_repo" "$new_issue" "$source_repo" "$source_pr"
+        
+        # Commenter sur la PR source pour confirmer
+        gh pr comment "$source_pr" --repo "mentorize-app/$source_repo" --body "🤖 **Mention Traitée**
+
+✅ Tâche créée automatiquement: $new_issue
+🎯 Agent: @$agent 
+📂 Repository: mentorize-app/$target_repo
+
+La tâche sera traitée dans le prochain cycle de l'orchestrateur.
+
+*Système de mentions interactives Dulien*" 2>/dev/null
+    else
+        log "❌ Erreur création issue pour mention @$agent"
+    fi
+}
+
+add_mention_to_workflow() {
+    local agent="$1"
+    local target_repo="$2"
+    local issue_url="$3"
+    local source_repo="$4"
+    local source_pr="$5"
+    
+    # Extraire numéro d'issue de l'URL  
+    local issue_number=$(echo "$issue_url" | grep -Eo '[0-9]+$')
+    
+    # Créer entrée workflow pour mention
+    local epic_id="mention-$(date +%s)"
+    
+    if [ -f "$WORKFLOW_FILE" ]; then
+        # Ajouter à workflow existant
+        jq --arg epic_id "$epic_id" \
+           --arg analysis "Tâche créée par mention @$agent depuis PR $source_repo #$source_pr" \
+           --arg repo "$target_repo" \
+           --arg issue "$issue_number" \
+           --arg title "Mention @$agent: action demandée" \
+           --arg agent "$agent" \
+           '.epics[$epic_id] = {
+               "analysis": $analysis,
+               "tasks_created": [{
+                   "repo": $repo,
+                   "issue_number": ($issue | tonumber),
+                   "title": $title,
+                   "agent": $agent
+               }],
+               "workflow": [{
+                   "task_id": ($repo + "-" + $issue),
+                   "depends_on": [],
+                   "priority": 2,
+                   "status": "mention_triggered"
+               }]
+           }' "$WORKFLOW_FILE" > "$WORKFLOW_FILE.tmp"
+        mv "$WORKFLOW_FILE.tmp" "$WORKFLOW_FILE"
+        
+        log "📝 Mention ajoutée au workflow: $epic_id"
+    fi
+}
+
 # === FINALISATION REVIEWS ===
 
 check_completed_reviews() {
@@ -961,16 +1218,24 @@ main() {
         "check-reviews")
             check_completed_reviews
             ;;
+        "check-mentions")
+            check_pr_mentions
+            ;;
+        "execute-mentions")
+            execute_mention_tasks
+            ;;
         "full")
             log "🚀 Démarrage cycle complet orchestrateur Dulien"
             check_new_epics
             execute_pending_tasks
+            check_pr_mentions
+            execute_mention_tasks
             check_prs_for_review
             check_completed_reviews
             log "✅ Cycle terminé"
             ;;
         *)
-            echo "Usage: $0 [init|check-epics|execute-tasks|check-prs|check-reviews|full]"
+            echo "Usage: $0 [init|check-epics|execute-tasks|check-prs|check-reviews|check-mentions|execute-mentions|full]"
             exit 1
             ;;
     esac

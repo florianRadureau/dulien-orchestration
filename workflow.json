@@ -56,6 +56,291 @@
           "status": "ready_to_merge"
         }
       ]
+    },
+    "mention-1756068539": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 5,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-5",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068543": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 6,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-6",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068546": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 7,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-7",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068553": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 8,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-8",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068555": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 9,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-9",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068558": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 10,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-10",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068566": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 11,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-11",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068570": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 12,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-12",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068573": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 13,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-13",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068575": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 14,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-14",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068577": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 15,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-15",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068579": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 16,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-16",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068581": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 17,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-17",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068584": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 18,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-18",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
+    },
+    "mention-1756068586": {
+      "analysis": "Tâche créée par mention @webapp depuis PR webapp #3",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 19,
+          "title": "Mention @webapp: action demandée",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-19",
+          "depends_on": [],
+          "priority": 2,
+          "status": "mention_triggered"
+        }
+      ]
     }
   }
 }
