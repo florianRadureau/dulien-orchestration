@@ -279,7 +279,7 @@ Commence maintenant l'analyse et la création des tâches."
 
     # Récupérer le token GitHub pour Tech Lead Agent
     if [ -z "$GITHUB_TOKEN" ]; then
-        export GITHUB_TOKEN=$(gh auth token 2>/dev/null || echo "")
+        export GITHUB_TOKEN=$(get_github_token)
         if [ -z "$GITHUB_TOKEN" ]; then
             log "❌ Impossible de récupérer GITHUB_TOKEN pour Tech Lead Agent"
             return 1
@@ -667,7 +667,7 @@ FORMAT RAPPORT:
 
     # Récupérer le token GitHub pour Security Agent  
     if [ -z "$GITHUB_TOKEN" ]; then
-        export GITHUB_TOKEN=$(gh auth token 2>/dev/null || echo "")
+        export GITHUB_TOKEN=$(get_github_token)
     fi
 
     # Exécuter Security Agent
@@ -839,7 +839,7 @@ FORMAT RAPPORT:
 
     # Récupérer token et exécuter
     if [ -z "$GITHUB_TOKEN" ]; then
-        export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
+        export GITHUB_TOKEN=$(get_github_token)
     fi
     
     SECURITY_RESULT=$(echo "$SECURITY_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
@@ -881,7 +881,7 @@ FORMAT RAPPORT:
 
     # Récupérer token et exécuter
     if [ -z "$GITHUB_TOKEN" ]; then
-        export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
+        export GITHUB_TOKEN=$(get_github_token)
     fi
     
     TECH_LEAD_RESULT=$(echo "$TECH_LEAD_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
@@ -947,6 +947,35 @@ declare -A AGENT_REPOS=(
 check_pr_mentions() {
     log "💬 Vérification mentions dans commentaires PR..."
     
+    # Lock file pour éviter l'exécution concurrente  
+    local LOCK_FILE="$WORK_DIR/mentions.lock"
+    
+    # Vérifier si un autre processus traite déjà les mentions
+    if [ -f "$LOCK_FILE" ]; then
+        local lock_pid=$(cat "$LOCK_FILE" 2>/dev/null)
+        if [ -n "$lock_pid" ] && kill -0 "$lock_pid" 2>/dev/null; then
+            log "⚠️ Un autre processus traite déjà les mentions (PID: $lock_pid)"
+            return 0
+        else
+            log "🗑️ Suppression lock file obsolète"
+            rm -f "$LOCK_FILE"
+        fi
+    fi
+    
+    # Créer lock file avec notre PID
+    echo $$ > "$LOCK_FILE"
+    
+    # Fonction de nettoyage appelée à la sortie
+    cleanup_mentions_lock() {
+        rm -f "$LOCK_FILE"
+        log "🔓 Lock file mentions supprimé"
+    }
+    trap cleanup_mentions_lock EXIT INT TERM
+    
+    # Cache des mentions traitées pour éviter les doublons
+    local PROCESSED_MENTIONS_FILE="$WORK_DIR/logs/processed-mentions.log"
+    touch "$PROCESSED_MENTIONS_FILE"
+    
     # Scanner toutes les PRs ouvertes sur tous les repos
     for agent in "${!AGENT_REPOS[@]}"; do
         local repo="${AGENT_REPOS[$agent]}"
@@ -965,9 +994,21 @@ check_pr_mentions() {
                 local pr_comments=$(gh pr view $pr_number --repo mentorize-app/$repo --comments 2>/dev/null || echo "")
                 
                 if [ -n "$pr_comments" ]; then
-                    # Détecter mentions avec pattern: @agent action description
-                    echo "$pr_comments" | grep -Eo "@(webapp|tenant-api|referencial|infrastructure|mail-server|landing-page|security|tech-lead|rgaa)\s+[^@]*" | while read -r mention; do
-                        process_mention "$mention" "$repo" "$pr_number" "$pr_title"
+                    # Filtrer les commentaires de bots et ne traiter que ceux des humains
+                    echo "$pr_comments" | grep -v "Dulien Orchestrator\[bot\]" | grep -v "🤖.*Dulien" | while IFS= read -r line; do
+                        # Détecter mentions uniquement des commentaires humains
+                        if echo "$line" | grep -Eq "@(webapp|tenant-api|referencial|infrastructure|mail-server|landing-page|tech-lead)"; then
+                            # Extraire la mention avec son contexte
+                            local mention=$(echo "$line" | grep -Eo "@(webapp|tenant-api|referencial|infrastructure|mail-server|landing-page|tech-lead)[^@]*")
+                            if [ -n "$mention" ]; then
+                                # Vérifier si déjà traité (simple déduplication)
+                                local mention_hash=$(echo "$mention$repo$pr_number" | md5sum | cut -d' ' -f1)
+                                if ! grep -q "$mention_hash" "$PROCESSED_MENTIONS_FILE" 2>/dev/null; then
+                                    echo "$mention_hash" >> "$PROCESSED_MENTIONS_FILE"
+                                    process_mention "$mention" "$repo" "$pr_number" "$pr_title"
+                                fi
+                            fi
+                        fi
                     done
                 fi
             done
@@ -987,15 +1028,212 @@ process_mention() {
     
     log "💬 Mention détectée: @$mentioned_agent → '$action_text'"
     
-    # Déterminer le repository cible
-    local target_repo="${AGENT_REPOS[$mentioned_agent]}"
-    if [ -z "$target_repo" ]; then
-        log "❌ Agent @$mentioned_agent inconnu"
+    # Logique révisée: Correction PR vs Nouvelle Tâche
+    if [ "$mentioned_agent" = "tech-lead" ]; then
+        # @tech-lead = création nouvelle tâche
+        log "🎯 Tech Lead: création nouvelle tâche"
+        create_new_task_from_tech_lead "$action_text" "$source_repo" "$source_pr" "$pr_title"
+    else
+        # @agent = correction de la PR courante
+        log "🔧 Correction PR: demande à @$mentioned_agent"
+        request_pr_correction "$mentioned_agent" "$source_repo" "$source_pr" "$action_text"
+    fi
+}
+
+request_pr_correction() {
+    local agent="$1"
+    local source_repo="$2" 
+    local source_pr="$3"
+    local action_text="$4"
+    
+    log "🔧 Demande correction PR à @$agent"
+    
+    # Obtenir token GitHub App
+    local github_token=$(get_github_token)
+    if [ -z "$github_token" ]; then
+        log "❌ Impossible de récupérer token GitHub App"
         return 1
     fi
     
-    # Créer la tâche automatiquement
-    create_mention_task "$mentioned_agent" "$target_repo" "$action_text" "$source_repo" "$source_pr" "$pr_title"
+    # Commenter sur la PR pour demander correction
+    GITHUB_TOKEN="$github_token" gh pr comment "$source_pr" --repo "mentorize-app/$source_repo" --body "🔧 **Demande de Correction**
+
+@$agent, peux-tu corriger cette PR :
+
+**Action demandée:** $action_text
+
+Cette demande concerne la PR actuelle, pas une nouvelle tâche.
+
+---
+*Dulien Orchestrator - Demande de correction automatique*" 2>/dev/null
+    
+    if [ $? -eq 0 ]; then
+        log "✅ Demande de correction envoyée à @$agent"
+    else
+        log "❌ Erreur envoi demande correction à @$agent"
+    fi
+}
+
+create_new_task_from_tech_lead() {
+    local action_text="$1"
+    local source_repo="$2"
+    local source_pr="$3" 
+    local pr_title="$4"
+    
+    log "🎯 Tech Lead: analyse pour création tâche"
+    
+    # Obtenir token GitHub App
+    local github_token=$(get_github_token)
+    if [ -z "$github_token" ]; then
+        log "❌ Impossible de récupérer token GitHub App"
+        return 1
+    fi
+    
+    # Parser le repository cible s'il est spécifié
+    local target_repo=""
+    if [[ "$action_text" =~ dans[[:space:]]+([a-zA-Z-]+) ]]; then
+        target_repo="${BASH_REMATCH[1]}"
+        # Mapper noms courts vers noms complets
+        case "$target_repo" in
+            "tenant-api") target_repo="tenant-specific-api" ;;
+            "webapp"|"referencial"|"infrastructure"|"mail-server"|"landing-page") ;;
+            *) target_repo="" ;;  # Repo non reconnu
+        esac
+    fi
+    
+    # Si pas de repo spécifié ou non reconnu, demander clarification
+    if [ -z "$target_repo" ]; then
+        GITHUB_TOKEN="$github_token" gh pr comment "$source_pr" --repo "mentorize-app/$source_repo" --body "🤔 **Tech Lead - Clarification Nécessaire**
+
+J'ai reçu la demande : \"$action_text\"
+
+**Question :** Dans quel repository dois-je créer cette tâche ?
+- webapp (interface utilisateur Angular)
+- tenant-specific-api (API backend tenant)
+- referencial (API données partagées)
+- infrastructure (DevOps, déploiement)
+- mail-server (service messagerie)
+- landing-page (pages marketing)
+
+Peux-tu préciser : \`@tech-lead crée une tâche dans [REPO] pour ...\`
+
+---
+*Dulien Orchestrator - Tech Lead Agent*" 2>/dev/null
+        
+        log "❓ Tech Lead demande clarification du repository cible"
+        return 0
+    fi
+    
+    # Créer l'issue dans le repository cible
+    local issue_title="[TECH-LEAD] $(echo "$action_text" | cut -c1-50)..."
+    local issue_body="🎯 **Tâche créée par Tech Lead**
+
+**Demande originale:** $action_text
+
+**Contexte:**
+- Demandée depuis PR mentorize-app/$source_repo #$source_pr
+- Titre PR: \"$pr_title\"
+- Analysée et routée par Tech Lead
+
+**Instructions:**
+$action_text
+
+---
+*Tâche créée automatiquement par Tech Lead Agent Dulien*"
+
+    # Créer l'issue GitHub
+    local new_issue=$(GITHUB_TOKEN="$github_token" gh issue create \
+        --repo "mentorize-app/$target_repo" \
+        --title "$issue_title" \
+        --body "$issue_body" 2>/dev/null)
+    
+    if [ $? -eq 0 ]; then
+        log "✅ Tâche créée par Tech Lead: $new_issue"
+        
+        # Confirmer sur la PR source
+        GITHUB_TOKEN="$github_token" gh pr comment "$source_pr" --repo "mentorize-app/$source_repo" --body "🎯 **Tech Lead - Tâche Créée**
+
+✅ Nouvelle tâche créée: $new_issue
+📂 Repository: mentorize-app/$target_repo
+🤖 Sera traitée par l'agent approprié dans le prochain cycle
+
+**Action:** $action_text
+
+---
+*Tech Lead Agent - Création de tâche automatique*" 2>/dev/null
+        
+        # Ajouter au workflow
+        add_tech_lead_task_to_workflow "$target_repo" "$new_issue" "$source_repo" "$source_pr" "$action_text"
+    else
+        log "❌ Erreur création tâche Tech Lead"
+        
+        # Signaler l'erreur
+        GITHUB_TOKEN="$github_token" gh pr comment "$source_pr" --repo "mentorize-app/$source_repo" --body "❌ **Tech Lead - Erreur**
+
+Impossible de créer la tâche dans mentorize-app/$target_repo.
+
+Vérifiez:
+- Les permissions du bot sur ce repository
+- Que le repository existe
+- La syntaxe de la demande
+
+---
+*Tech Lead Agent - Erreur création tâche*" 2>/dev/null
+    fi
+}
+
+add_tech_lead_task_to_workflow() {
+    local target_repo="$1"
+    local issue_url="$2"
+    local source_repo="$3"
+    local source_pr="$4" 
+    local action_text="$5"
+    
+    # Extraire numéro d'issue de l'URL  
+    local issue_number=$(echo "$issue_url" | grep -Eo '[0-9]+$')
+    
+    # Créer entrée workflow pour tâche Tech Lead
+    local epic_id="tech-lead-$(date +%s)"
+    
+    if [ -f "$WORKFLOW_FILE" ]; then
+        # Déterminer agent approprié selon le repo
+        local agent=""
+        case "$target_repo" in
+            "webapp") agent="webapp" ;;
+            "tenant-specific-api") agent="tenant-api" ;;
+            "referencial") agent="referencial" ;;
+            "infrastructure") agent="infrastructure" ;;
+            "mail-server") agent="mail-server" ;;
+            "landing-page") agent="landing-page" ;;
+            *) agent="unknown" ;;
+        esac
+        
+        # Ajouter à workflow
+        jq --arg epic_id "$epic_id" \
+           --arg analysis "Tâche créée par Tech Lead depuis PR $source_repo #$source_pr: $action_text" \
+           --arg repo "$target_repo" \
+           --arg issue "$issue_number" \
+           --arg title "Tech Lead: $action_text" \
+           --arg agent "$agent" \
+           '.epics[$epic_id] = {
+               "analysis": $analysis,
+               "tasks_created": [{
+                   "repo": $repo,
+                   "issue_number": ($issue | tonumber),
+                   "title": $title,
+                   "agent": $agent
+               }],
+               "workflow": [{
+                   "task_id": ($repo + "-" + $issue),
+                   "depends_on": [],
+                   "priority": 1,
+                   "status": "pending"
+               }]
+           }' "$WORKFLOW_FILE" > "$WORKFLOW_FILE.tmp"
+        mv "$WORKFLOW_FILE.tmp" "$WORKFLOW_FILE"
+        
+        log "📝 Tâche Tech Lead ajoutée au workflow: $epic_id"
+    fi
 }
 
 create_mention_task() {
