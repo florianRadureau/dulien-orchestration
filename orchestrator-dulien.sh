@@ -196,7 +196,14 @@ extract_json() {
         return 0
     fi
     
-    # Method 4: Python fallback si disponible
+    # Method 4: JSON pur après lignes de log (pour create_github_issues)
+    result=$(echo "$input" | awk '/^{/ {p=1} p {print}' | head -c 10000)
+    if [ -n "$result" ] && echo "$result" | jq . >/dev/null 2>&1; then
+        echo "$result"
+        return 0
+    fi
+    
+    # Method 5: Python fallback si disponible
     if command -v python3 >/dev/null 2>&1; then
         result=$(echo "$input" | python3 -c "
 import sys, json
@@ -292,18 +299,54 @@ Commence maintenant l'analyse et la création des tâches."
         fi
     fi
     
-    # Exécuter Tech Lead Agent via pipe avec token d'environnement
+    # === INSTRUMENTATION DIAGNOSTIC ===
+    log "🔍 DEBUG: Sauvegarde contexte avant appel Claude Code"
+    echo "$TECH_LEAD_PROMPT" > "$WORK_DIR/temp/prompt-sent-$epic_number.txt"
+    echo "$EPIC_DATA" > "$WORK_DIR/temp/epic-data-$epic_number.json" 
+    env | grep -E "(GITHUB|PATH)" > "$WORK_DIR/temp/environment-$epic_number.txt"
+    log "🔍 DEBUG: Prompt length: $(echo "$TECH_LEAD_PROMPT" | wc -c) characters"
+    
+    # Exécuter Tech Lead Agent avec capture d'erreur complète
+    log "🔍 DEBUG: Démarrage appel Claude Code avec MCP complet"
     TECH_LEAD_RESULT=$(echo "$TECH_LEAD_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
         --mcp-config "$AGENTS_DIR/tech-lead.json" \
         --append-system-prompt "Tu es le Tech Lead Agent Dulien. Tu analyses les épics et crées les tâches techniques distribuées." \
-        --allowed-tools "mcp__github__*,business_context__*")
+        --allowed-tools "mcp__github__*,business_context__*" \
+        2> "$WORK_DIR/temp/claude-error-$epic_number.log" \
+        || {
+            echo "CLAUDE_EXECUTION_FAILED" > "$WORK_DIR/temp/claude-status-$epic_number.txt"
+            echo "Exit code: $?" >> "$WORK_DIR/temp/claude-status-$epic_number.txt"
+            echo "Timestamp: $(date)" >> "$WORK_DIR/temp/claude-status-$epic_number.txt"
+            log "❌ Claude Code a échoué pour épic #$epic_number - voir temp/claude-error-$epic_number.log"
+            echo "EXECUTION_ERROR"
+        })
+    
+    # Sauvegarde et analyse du résultat
+    echo "$TECH_LEAD_RESULT" > "$WORK_DIR/temp/claude-result-$epic_number.txt"
+    log "🔍 DEBUG: Claude result length: $(echo "$TECH_LEAD_RESULT" | wc -c) characters"
+    log "🔍 DEBUG: Claude result preview: $(echo "$TECH_LEAD_RESULT" | head -c 100)..."
+    
+    # Diagnostic automatique si erreur détectée
+    if [ "$TECH_LEAD_RESULT" = "Execution error" ] || [ "$TECH_LEAD_RESULT" = "EXECUTION_ERROR" ]; then
+        log "🔍 DIAGNOSTIC: Execution error détectée - démarrage tests en cascade"
+        echo "EXECUTION_ERROR_DETECTED" > "$WORK_DIR/temp/diagnosis-$epic_number.txt"
+        echo "Prompt length: $(echo "$TECH_LEAD_PROMPT" | wc -c)" >> "$WORK_DIR/temp/diagnosis-$epic_number.txt"
+        echo "MCP config: $AGENTS_DIR/tech-lead.json" >> "$WORK_DIR/temp/diagnosis-$epic_number.txt"
+        ls -la "$AGENTS_DIR/tech-lead.json" >> "$WORK_DIR/temp/diagnosis-$epic_number.txt"
+        
+        # Démarrer tests en cascade
+        run_diagnostic_cascade "$epic_number" "$TECH_LEAD_PROMPT"
+    fi
     
     log "📄 Résultat analyse Tech Lead reçu"
     
     # Extraire le JSON du résultat avec fallbacks robustes
     if WORKFLOW_JSON=$(extract_json "$TECH_LEAD_RESULT"); then
         # Créer les issues GitHub réellement
-        UPDATED_JSON=$(create_github_issues "$WORKFLOW_JSON")
+        UPDATED_JSON_RAW=$(create_github_issues "$WORKFLOW_JSON")
+        
+        # Extraire uniquement le JSON final (après les logs)
+        UPDATED_JSON=$(echo "$UPDATED_JSON_RAW" | awk '/^{/ {p=1} p {print}')
         
         # Ajouter au workflow global avec les vrais numéros d'issues
         add_to_workflow "$epic_number" "$UPDATED_JSON"
@@ -336,6 +379,142 @@ L'extraction du plan JSON a échoué. Résultat sauvegardé pour investigation.
 ---
 *Debug info sauvé dans: temp/failed-analysis-$epic_number.txt*"
     fi
+}
+
+# === DIAGNOSTIC CASCADE ===
+
+run_diagnostic_cascade() {
+    local epic_number="$1"
+    local prompt="$2"
+    
+    log "🔍 DIAGNOSTIC CASCADE: Test Business Context MCP seul"
+    
+    # Créer config Business Context seulement
+    cat > "$WORK_DIR/temp/business-only.json" << EOF
+{
+  "mcpServers": {
+    "business-context": {
+      "command": "node",
+      "args": ["/home/florian/projets/business-context-mcp/dist/index.js"]
+    }
+  }
+}
+EOF
+    
+    # Test 1: Business Context MCP seulement
+    local business_result=$(echo "$prompt" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
+        --mcp-config "$WORK_DIR/temp/business-only.json" \
+        --allowed-tools "business_context__*" \
+        2> "$WORK_DIR/temp/business-only-error-$epic_number.log" \
+        || echo "BUSINESS_MCP_FAILED")
+    
+    echo "$business_result" > "$WORK_DIR/temp/business-only-result-$epic_number.txt"
+    log "🔍 DIAGNOSTIC: Business Context result length: $(echo "$business_result" | wc -c)"
+    
+    # Test 2: Sans MCP du tout
+    log "🔍 DIAGNOSTIC CASCADE: Test sans MCP"
+    local no_mcp_result=$(echo "$prompt" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
+        2> "$WORK_DIR/temp/no-mcp-error-$epic_number.log" \
+        || echo "NO_MCP_FAILED")
+    
+    echo "$no_mcp_result" > "$WORK_DIR/temp/no-mcp-result-$epic_number.txt"
+    log "🔍 DIAGNOSTIC: Sans MCP result length: $(echo "$no_mcp_result" | wc -c)"
+    
+    # Test 3: Vérifier les serveurs MCP
+    log "🔍 DIAGNOSTIC CASCADE: Test des serveurs MCP"
+    echo "=== MCP SERVER TESTS ===" > "$WORK_DIR/temp/mcp-server-test-$epic_number.txt"
+    
+    # Test Business Context MCP accessibility
+    timeout 3 node /home/florian/projets/business-context-mcp/dist/index.js > "$WORK_DIR/temp/business-mcp-test.txt" 2>&1 &
+    local mcp_pid=$!
+    sleep 1
+    if kill -0 $mcp_pid 2>/dev/null; then
+        echo "✅ Business Context MCP server démarre correctement" >> "$WORK_DIR/temp/mcp-server-test-$epic_number.txt"
+        kill $mcp_pid 2>/dev/null
+    else
+        echo "❌ Business Context MCP server failed to start" >> "$WORK_DIR/temp/mcp-server-test-$epic_number.txt"
+    fi
+    
+    # Test GitHub MCP
+    echo "Testing GitHub MCP..." >> "$WORK_DIR/temp/mcp-server-test-$epic_number.txt"
+    timeout 3 npx -y @modelcontextprotocol/server-github > "$WORK_DIR/temp/github-mcp-test.txt" 2>&1 &
+    local github_mcp_pid=$!
+    sleep 1
+    if kill -0 $github_mcp_pid 2>/dev/null; then
+        echo "✅ GitHub MCP server accessible" >> "$WORK_DIR/temp/mcp-server-test-$epic_number.txt"
+        kill $github_mcp_pid 2>/dev/null
+    else
+        echo "❌ GitHub MCP server inaccessible" >> "$WORK_DIR/temp/mcp-server-test-$epic_number.txt"
+    fi
+    
+    # Générer rapport consolidé
+    generate_error_report "$epic_number" "$business_result" "$no_mcp_result"
+    
+    log "📊 DIAGNOSTIC TERMINÉ: Voir temp/diagnostic-report-$epic_number.md"
+}
+
+generate_error_report() {
+    local epic_number="$1"
+    local business_result="$2" 
+    local no_mcp_result="$3"
+    local report_file="$WORK_DIR/temp/diagnostic-report-$epic_number.md"
+    
+    cat > "$report_file" << EOF
+# Rapport de Diagnostic Épic #$epic_number
+
+**Date:** $(date)
+**Épic:** #$epic_number
+
+## 📊 Résumé des Tests
+
+| Test | Résultat | Status |
+|------|----------|--------|
+| MCP Complet | $([ -f "$WORK_DIR/temp/claude-error-$epic_number.log" ] && echo "❌ ÉCHEC" || echo "⚠️ INCONNU") | Voir claude-error-$epic_number.log |
+| Business Context | $(echo "$business_result" | head -c 20)... | $([ "$business_result" = "BUSINESS_MCP_FAILED" ] && echo "❌ ÉCHEC" || echo "✅ OK") |
+| Sans MCP | $(echo "$no_mcp_result" | head -c 20)... | $([ "$no_mcp_result" = "NO_MCP_FAILED" ] && echo "❌ ÉCHEC" || echo "✅ OK") |
+
+## 🔍 Logs d'Erreur
+
+### Claude Code MCP Complet
+\`\`\`
+$(cat "$WORK_DIR/temp/claude-error-$epic_number.log" 2>/dev/null || echo "Pas d'erreur capturée")
+\`\`\`
+
+### Business Context MCP  
+\`\`\`
+$(cat "$WORK_DIR/temp/business-only-error-$epic_number.log" 2>/dev/null || echo "Pas d'erreur")
+\`\`\`
+
+### Sans MCP
+\`\`\`
+$(cat "$WORK_DIR/temp/no-mcp-error-$epic_number.log" 2>/dev/null || echo "Pas d'erreur")
+\`\`\`
+
+## 🔧 Serveurs MCP
+\`\`\`
+$(cat "$WORK_DIR/temp/mcp-server-test-$epic_number.txt" 2>/dev/null || echo "Tests serveurs non disponibles")
+\`\`\`
+
+## 📁 Fichiers Générés
+- prompt-sent-$epic_number.txt
+- epic-data-$epic_number.json
+- environment-$epic_number.txt
+- claude-result-$epic_number.txt
+- business-only-result-$epic_number.txt  
+- no-mcp-result-$epic_number.txt
+
+## 🎯 Recommandations
+
+$(if [ "$business_result" != "BUSINESS_MCP_FAILED" ] && [ "$business_result" != "Execution error" ]; then
+    echo "✅ **Business Context MCP fonctionne** - Utiliser cette config"
+elif [ "$no_mcp_result" != "NO_MCP_FAILED" ] && [ "$no_mcp_result" != "Execution error" ]; then
+    echo "⚠️ **Fallback Sans MCP requis** - MCP servers défaillants"
+else
+    echo "❌ **Problème critique Claude Code** - Investigation approfondie requise"
+fi)
+EOF
+
+    log "📋 Rapport diagnostic généré: $report_file"
 }
 
 # === GESTION WORKFLOW ===
@@ -417,22 +596,25 @@ Cette tâche fait partie du workflow orchestré Dulien.
     local tasks_created=$(cat "$temp_file")
     rm -f "$temp_file" "$temp_file.tmp"
     
-    # Créer le JSON de sortie avec les vrais numéros d'issues
-    updated_json=$(echo "$workflow_json" | jq --argjson created "$tasks_created" '
-        .tasks_created = $created |
-        .workflow = (.workflow | map(
-            . as $item |
-            ($created[] | select(.repo == ($item.task_id | split("-")[0]))) as $task |
-            .task_id = ($task.repo + "-" + ($task.issue_number | tostring))
-        )) |
-        .workflow = (.workflow | map(.depends_on |= map(
-            . as $dep |
-            ($created[] | select(.repo == ($dep | split("-")[0]))) as $task |
-            ($task.repo + "-" + ($task.issue_number | tostring))
-        ))) |
-        del(.tasks_to_create)')
+    # Créer le JSON de sortie simplifié - logique JQ complexe buggée
+    # Remplacer TBD par les vrais numéros dans une approche plus simple
+    updated_json="$workflow_json"
     
-    echo "$updated_json"
+    # Pour chaque tâche créée, remplacer les TBD par les vrais numéros
+    while IFS= read -r task_line; do
+        local repo=$(echo "$task_line" | jq -r '.repo')
+        local issue_num=$(echo "$task_line" | jq -r '.issue_number')
+        
+        # Remplacer dans updated_json tous les "repo-TBD" par "repo-issue_num"
+        updated_json=$(echo "$updated_json" | sed "s/${repo}-TBD/${repo}-${issue_num}/g")
+    done < <(echo "$tasks_created" | jq -c '.[]')
+    
+    # Créer le JSON final simplement
+    echo "{
+        \"analysis\": $(echo "$workflow_json" | jq -r '.analysis // empty' | jq -R .),
+        \"workflow\": $(echo "$updated_json" | jq '.workflow // []'),
+        \"tasks_created\": $tasks_created
+    }"
 }
 
 add_to_workflow() {
