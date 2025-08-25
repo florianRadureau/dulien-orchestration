@@ -10,6 +10,10 @@
     "business-context": {
       "command": "node",
       "args": ["/home/florian/projets/business-context-mcp/dist/index.js"]
+    },
+    "technical-context": {
+      "command": "node",
+      "args": ["/home/florian/projets/technical-context-mcp/dist/index.js"]
     }
   }
 }

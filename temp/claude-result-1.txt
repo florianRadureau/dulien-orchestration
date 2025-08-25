@@ -1,25 +1,29 @@
+Maintenant je comprends mieux. C'est un système d'orchestration qui gère plusieurs repos. Je dois analyser l'épic et planifier les tâches pour le repo webapp (Angular) car il s'agit d'ajouter des placeholders sur la page home.
+
+Basé sur l'analyse de l'épic, voici ma planification technique :
+
 ```json
 {
-  "analysis": "Ajout de placeholders cohérents sur la page d'accueil pour améliorer l'expérience utilisateur en affichant des messages contextuels quand les sections 'Mentors recommandés', 'Prochains rendez-vous' et 'Fil actualités/articles' sont vides. Cela nécessite la création de composants placeholder réutilisables avec des messages adaptés à chaque contexte, en suivant le même pattern que les formations recommandées existantes.",
+  "analysis": "Ajout de placeholders (empty states) cohérents sur la page /home pour 4 sections : mentors recommandés, prochains rendez-vous, fil d'actualités et articles. Réutilisation du pattern de placeholder existant des formations recommandées pour garantir une cohérence visuelle et UX.",
   "tasks_to_create": [
     {
       "repo": "webapp",
-      "title": "Créer un composant placeholder réutilisable pour les sections vides",
+      "title": "Ajouter placeholder empty state dans section mentors recommandés sur /home",
       "agent": "webapp"
     },
     {
       "repo": "webapp", 
-      "title": "Intégrer les placeholders dans la section 'Mentors recommandés' de la home",
+      "title": "Ajouter placeholder empty state dans section prochains rendez-vous sur /home",
       "agent": "webapp"
     },
     {
       "repo": "webapp",
-      "title": "Intégrer les placeholders dans la section 'Prochains rendez-vous' de la home",
+      "title": "Ajouter placeholder empty state dans section fil d'actualités sur /home",
       "agent": "webapp"
     },
     {
       "repo": "webapp",
-      "title": "Intégrer les placeholders dans la section 'Fil actualités/articles' de la home",
+      "title": "Ajouter placeholder empty state dans section articles sur /home",
       "agent": "webapp"
     }
   ],
@@ -31,18 +35,18 @@
     },
     {
       "task_id": "webapp-TBD",
-      "depends_on": ["webapp-TBD"],
-      "priority": 2
+      "depends_on": [],
+      "priority": 1
     },
     {
       "task_id": "webapp-TBD",
-      "depends_on": ["webapp-TBD"],
-      "priority": 2
+      "depends_on": [],
+      "priority": 1
     },
     {
       "task_id": "webapp-TBD",
-      "depends_on": ["webapp-TBD"],
-      "priority": 2
+      "depends_on": [],
+      "priority": 1
     }
   ]
 }

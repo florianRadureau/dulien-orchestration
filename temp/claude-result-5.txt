@@ -1,2 +1,61 @@
-[2025-08-25 19:15:21] ❌ Claude Code timeout/échec pour épic #5 - voir temp/claude-error-5.log
-EXECUTION_ERROR
+Basé sur mon analyse de l'épic #5 concernant la gestion de l'expiration des tokens et la redirection automatique vers la page de connexion, voici ma planification technique :
+
+```json
+{
+  "analysis": "Cette épic nécessite l'implémentation d'un intercepteur HTTP côté webapp pour capturer les erreurs 401, gérer le rafraîchissement automatique des tokens Azure AD, et rediriger vers la page de connexion en cas d'échec. Le système doit nettoyer le stockage local, afficher une notification claire à l'utilisateur et assurer une expérience fluide lors de la reconnexion.",
+  "tasks_to_create": [
+    {
+      "repo": "webapp",
+      "title": "Créer AuthInterceptor pour gérer les erreurs 401 et le refresh token Azure AD",
+      "agent": "webapp"
+    },
+    {
+      "repo": "webapp",
+      "title": "Implémenter TokenRefreshService pour la gestion du refresh token avec Azure AD",
+      "agent": "webapp"
+    },
+    {
+      "repo": "webapp",
+      "title": "Ajouter notification toast et redirection vers login sur expiration de session",
+      "agent": "webapp"
+    },
+    {
+      "repo": "webapp",
+      "title": "Nettoyer le localStorage des tokens expirés avant redirection",
+      "agent": "webapp"
+    },
+    {
+      "repo": "webapp",
+      "title": "Ajouter tests unitaires pour AuthInterceptor et TokenRefreshService",
+      "agent": "webapp"
+    }
+  ],
+  "workflow": [
+    {
+      "task_id": "webapp-TBD",
+      "depends_on": [],
+      "priority": 1
+    },
+    {
+      "task_id": "webapp-TBD",
+      "depends_on": [],
+      "priority": 1
+    },
+    {
+      "task_id": "webapp-TBD",
+      "depends_on": ["webapp-TBD", "webapp-TBD"],
+      "priority": 2
+    },
+    {
+      "task_id": "webapp-TBD",
+      "depends_on": ["webapp-TBD"],
+      "priority": 2
+    },
+    {
+      "task_id": "webapp-TBD",
+      "depends_on": ["webapp-TBD", "webapp-TBD", "webapp-TBD", "webapp-TBD"],
+      "priority": 3
+    }
+  ]
+}
+```

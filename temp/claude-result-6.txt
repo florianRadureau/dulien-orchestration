@@ -1,0 +1,51 @@
+Je vais analyser directement l'épic et créer les tâches techniques pour automatiser la mise à jour du MCP métiers.
+
+```json
+{
+  "analysis": "Automatisation de la mise à jour du MCP métiers via GitHub Actions. Création d'un workflow CI/CD qui s'exécute après chaque merge sur master, analyse les changements de code, extrait les informations métier pertinentes et crée automatiquement une PR sur le repository du MCP avec les mises à jour nécessaires.",
+  "tasks_to_create": [
+    {
+      "repo": "infrastructure",
+      "title": "Créer workflow GitHub Actions pour extraction automatique des changements métiers",
+      "agent": "infrastructure"
+    },
+    {
+      "repo": "infrastructure", 
+      "title": "Implémenter script d'analyse du code pour extraction des patterns métiers",
+      "agent": "infrastructure"
+    },
+    {
+      "repo": "infrastructure",
+      "title": "Créer script de génération automatique de PR vers le repo MCP",
+      "agent": "infrastructure"
+    },
+    {
+      "repo": "infrastructure",
+      "title": "Configurer les secrets GitHub et permissions pour l'automatisation cross-repo",
+      "agent": "infrastructure"
+    }
+  ],
+  "workflow": [
+    {
+      "task_id": "infrastructure-TBD",
+      "depends_on": [],
+      "priority": 1
+    },
+    {
+      "task_id": "infrastructure-TBD",
+      "depends_on": [],
+      "priority": 1
+    },
+    {
+      "task_id": "infrastructure-TBD",
+      "depends_on": ["infrastructure-TBD", "infrastructure-TBD"],
+      "priority": 2
+    },
+    {
+      "task_id": "infrastructure-TBD",
+      "depends_on": [],
+      "priority": 1
+    }
+  ]
+}
+```

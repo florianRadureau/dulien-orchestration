@@ -1,59 +1,179 @@
 {
   "epics": {
-    "1": {
-      "analysis": "Ajout de placeholders cohérents sur la page d'accueil pour améliorer l'expérience utilisateur en affichant des messages contextuels quand les sections 'Mentors recommandés', 'Prochains rendez-vous' et 'Fil actualités/articles' sont vides. Cela nécessite la création de composants placeholder réutilisables avec des messages adaptés à chaque contexte, en suivant le même pattern que les formations recommandées existantes.",
+    "5": {
+      "analysis": "Cette épic nécessite l'implémentation d'un intercepteur HTTP côté webapp pour capturer les erreurs 401, gérer le rafraîchissement automatique des tokens Azure AD, et rediriger vers la page de connexion en cas d'échec. Le système doit nettoyer le stockage local, afficher une notification claire à l'utilisateur et assurer une expérience fluide lors de la reconnexion.",
       "workflow": [
         {
-          "task_id": "webapp-37",
+          "task_id": "webapp-41",
           "depends_on": [],
           "priority": 1
         },
         {
-          "task_id": "webapp-37",
+          "task_id": "webapp-41",
+          "depends_on": [],
+          "priority": 1
+        },
+        {
+          "task_id": "webapp-41",
           "depends_on": [
-            "webapp-37"
+            "webapp-41",
+            "webapp-41"
           ],
           "priority": 2
         },
         {
-          "task_id": "webapp-37",
+          "task_id": "webapp-41",
           "depends_on": [
-            "webapp-37"
+            "webapp-41"
           ],
           "priority": 2
         },
         {
-          "task_id": "webapp-37",
+          "task_id": "webapp-41",
           "depends_on": [
-            "webapp-37"
+            "webapp-41",
+            "webapp-41",
+            "webapp-41",
+            "webapp-41"
           ],
-          "priority": 2
+          "priority": 3
         }
       ],
       "tasks_created": [
         {
           "repo": "webapp",
-          "issue_number": 37,
-          "title": "Créer un composant placeholder réutilisable pour les sections vides",
+          "issue_number": 41,
+          "title": "Créer AuthInterceptor pour gérer les erreurs 401 et le refresh token Azure AD",
           "agent": "webapp"
         },
         {
           "repo": "webapp",
-          "issue_number": 38,
-          "title": "Intégrer les placeholders dans la section 'Mentors recommandés' de la home",
+          "issue_number": 42,
+          "title": "Implémenter TokenRefreshService pour la gestion du refresh token avec Azure AD",
           "agent": "webapp"
         },
         {
           "repo": "webapp",
-          "issue_number": 39,
-          "title": "Intégrer les placeholders dans la section 'Prochains rendez-vous' de la home",
+          "issue_number": 43,
+          "title": "Ajouter notification toast et redirection vers login sur expiration de session",
           "agent": "webapp"
         },
         {
           "repo": "webapp",
-          "issue_number": 40,
-          "title": "Intégrer les placeholders dans la section 'Fil actualités/articles' de la home",
+          "issue_number": 44,
+          "title": "Nettoyer le localStorage des tokens expirés avant redirection",
           "agent": "webapp"
+        },
+        {
+          "repo": "webapp",
+          "issue_number": 45,
+          "title": "Ajouter tests unitaires pour AuthInterceptor et TokenRefreshService",
+          "agent": "webapp"
+        }
+      ]
+    },
+    "1": {
+      "analysis": "Ajout de placeholders (empty states) cohérents sur la page /home pour 4 sections : mentors recommandés, prochains rendez-vous, fil d'actualités et articles. Réutilisation du pattern de placeholder existant des formations recommandées pour garantir une cohérence visuelle et UX.",
+      "workflow": [
+        {
+          "task_id": "webapp-46",
+          "depends_on": [],
+          "priority": 1
+        },
+        {
+          "task_id": "webapp-46",
+          "depends_on": [],
+          "priority": 1
+        },
+        {
+          "task_id": "webapp-46",
+          "depends_on": [],
+          "priority": 1
+        },
+        {
+          "task_id": "webapp-46",
+          "depends_on": [],
+          "priority": 1
+        }
+      ],
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 46,
+          "title": "Ajouter placeholder empty state dans section mentors recommandés sur /home",
+          "agent": "webapp"
+        },
+        {
+          "repo": "webapp",
+          "issue_number": 47,
+          "title": "Ajouter placeholder empty state dans section prochains rendez-vous sur /home",
+          "agent": "webapp"
+        },
+        {
+          "repo": "webapp",
+          "issue_number": 48,
+          "title": "Ajouter placeholder empty state dans section fil d'actualités sur /home",
+          "agent": "webapp"
+        },
+        {
+          "repo": "webapp",
+          "issue_number": 49,
+          "title": "Ajouter placeholder empty state dans section articles sur /home",
+          "agent": "webapp"
+        }
+      ]
+    },
+    "6": {
+      "analysis": "Automatisation de la mise à jour du MCP métiers via GitHub Actions. Création d'un workflow CI/CD qui s'exécute après chaque merge sur master, analyse les changements de code, extrait les informations métier pertinentes et crée automatiquement une PR sur le repository du MCP avec les mises à jour nécessaires.",
+      "workflow": [
+        {
+          "task_id": "infrastructure-10",
+          "depends_on": [],
+          "priority": 1
+        },
+        {
+          "task_id": "infrastructure-10",
+          "depends_on": [],
+          "priority": 1
+        },
+        {
+          "task_id": "infrastructure-10",
+          "depends_on": [
+            "infrastructure-10",
+            "infrastructure-10"
+          ],
+          "priority": 2
+        },
+        {
+          "task_id": "infrastructure-10",
+          "depends_on": [],
+          "priority": 1
+        }
+      ],
+      "tasks_created": [
+        {
+          "repo": "infrastructure",
+          "issue_number": 10,
+          "title": "Créer workflow GitHub Actions pour extraction automatique des changements métiers",
+          "agent": "infrastructure"
+        },
+        {
+          "repo": "infrastructure",
+          "issue_number": 11,
+          "title": "Implémenter script d'analyse du code pour extraction des patterns métiers",
+          "agent": "infrastructure"
+        },
+        {
+          "repo": "infrastructure",
+          "issue_number": 12,
+          "title": "Créer script de génération automatique de PR vers le repo MCP",
+          "agent": "infrastructure"
+        },
+        {
+          "repo": "infrastructure",
+          "issue_number": 13,
+          "title": "Configurer les secrets GitHub et permissions pour l'automatisation cross-repo",
+          "agent": "infrastructure"
         }
       ]
     }

@@ -1,0 +1,92 @@
+Tu es le Tech Lead Agent de Dulien. Tu dois analyser cette épic et planifier les tâches techniques.
+
+EPIC #6: [EPIC] correction et alimentation du mcp métiers
+
+DESCRIPTION:
+### 🏢 Domaine métier
+
+Learning - Formations, QCM, modules
+
+### 👥 Personas concernés
+
+- [ ] Collaborateur - Utilisateur final de la plateforme
+- [ ] Manager - Responsable d'équipe ou de département
+- [ ] Admin - Administrateur de tenant
+- [ ] Formateur - Créateur de contenu pédagogique
+- [ ] RH - Ressources Humaines
+
+### 📝 Description fonctionnelle
+
+En tant que développeur, je veux que le mcp oit mis à jour automatiquement après chaque merge sur master afin de toujours bénéficier d'une version à jour du mcp.
+
+## Contexte
+Actuellement le mcp n'est pas mis à jour après que la codebase ait évolué.
+
+## Valeur ajoutée  
+La mise à jour du mcp et la création de la PR doit être complètement automatisé et suivre le flow habituel.
+
+
+### ✅ Critères d'acceptation
+
+Lorsqu eje merge une PR sur master, une PR est crée par l'agent mcp vers master depuis une nouvelle branche sur le projtet du mcp métiers pour ajouter et corriger le mcp avec les nouvelles informations relatives au codes qui a été ajouté/modifié.
+
+### 🛠️ Impact technique estimé
+
+- [ ] Webapp (Angular) - Interface utilisateur
+- [ ] Tenant-Specific-API (NestJS) - API métier tenant
+- [ ] Referencial (NestJS) - API référentiel transverse
+- [ ] Mail-Server (JavaScript) - Notifications email
+- [ ] Landing-Page - Page d'accueil publique
+- [x] Infrastructure - Déploiement, monitoring
+
+### 🚨 Priorité métier
+
+priority:medium - Planning normal (prochain sprint)
+
+### 📚 Contexte additionnel
+
+_No response_
+
+### 🏁 Definition of Done
+
+- [x] Epic analysée et découpée par Tech Lead Agent
+- [x] Tâches techniques créées dans les repos appropriés
+- [x] Code développé selon les spécifications
+- [ ] Tests unitaires et d'intégration ajoutés/mis à jour
+- [x] Review de code validée par les pairs
+- [ ] Review de sécurité validée (si applicable)
+- [ ] Review RGAA validée (si interface utilisateur)
+- [x] Documentation technique mise à jour
+- [ ] Prêt pour validation fonctionnelle
+
+IMPORTANT:
+1. Tu dois SEULEMENT analyser et planifier - ne crée pas d'issues GitHub
+2. Tu DOIS retourner le résultat au format JSON exact ci-dessous  
+3. Utilise le business-context MCP pour comprendre le contexte métier
+4. Les numéros d'issues seront générés automatiquement après ton analyse
+
+REPOS DISPONIBLES:
+- webapp (Angular/TypeScript) → agent: webapp
+- tenant-specific-api (NestJS) → agent: tenant-api  
+- referencial (NestJS) → agent: referencial
+- mail-server (Node.js) → agent: mail-server
+- landing-page (Next.js) → agent: landing-page
+- infrastructure (DevOps) → agent: infrastructure
+
+Tu DOIS terminer ta réponse par ce JSON exact:
+
+```json
+{
+  "analysis": "Description technique de l'impact",
+  "tasks_to_create": [
+    {"repo": "webapp", "title": "Titre de la tâche", "agent": "webapp"},
+    {"repo": "tenant-specific-api", "title": "Autre tâche", "agent": "tenant-api"}
+  ],
+  "workflow": [
+    {"task_id": "webapp-TBD", "depends_on": [], "priority": 1},
+    {"task_id": "tenant-api-TBD", "depends_on": ["webapp-TBD"], "priority": 2}
+  ]
+}
+```
+
+Commence maintenant l'analyse et la création des tâches.

@@ -347,16 +347,27 @@ Commence maintenant l'analyse et la création des tâches."
     log "🔍 DEBUG: Chargement du business context"
     load_business_context > "$WORK_DIR/temp/business-context-$epic_number.txt"
     
-    # Créer le system prompt avec business context
+    # Créer le system prompt avec business et technical context
     cat > "$WORK_DIR/temp/system-prompt-$epic_number.txt" << 'EOF'
 Tu es le Tech Lead Agent Dulien. Tu analyses les épics et crées les tâches techniques distribuées.
+
+AVANT DE RÉPONDRE, tu DOIS obligatoirement :
+1. Utiliser technical_context__get_page_structure pour analyser la page concernée
+2. Utiliser technical_context__search_similar_components pour identifier les composants existants
+3. Utiliser technical_context__get_technical_components pour comprendre les composants disponibles
+4. Utiliser business_context__* si nécessaire pour le contexte métier
 
 BUSINESS CONTEXT DULIEN/MENTORIZE:
 EOF
     cat "$WORK_DIR/temp/business-context-$epic_number.txt" >> "$WORK_DIR/temp/system-prompt-$epic_number.txt"
     cat >> "$WORK_DIR/temp/system-prompt-$epic_number.txt" << 'EOF'
 
-CRITICAL: Tu DOIS retourner UNIQUEMENT du JSON valide, rien d'autre. Pas de texte, pas de markdown, pas d'explication.
+INSTRUCTIONS CRITIQUES:
+- Tu DOIS analyser le code existant avant de créer des tâches
+- Tu DOIS réutiliser les composants existants (EmptyStateComponent, etc.)
+- Tu DOIS spécifier les fichiers exacts à modifier dans les titres de tâches
+- Tu DOIS éviter de créer de nouveaux composants si des existants conviennent
+- Tu DOIS retourner UNIQUEMENT du JSON valide, rien d'autre
 
 Structure JSON obligatoire:
 {
@@ -388,7 +399,7 @@ EOF
 #!/bin/bash
 WORK_DIR="/home/florian/projets/dulien-orchestration"
 EPIC_NUM="1"
-claude --print --append-system-prompt "$(cat "$WORK_DIR/temp/system-prompt-$EPIC_NUM.txt")" < "$WORK_DIR/temp/prompt-sent-$EPIC_NUM.txt"
+claude --print --mcp-config "$WORK_DIR/agents/tech-lead.json" --append-system-prompt "$(cat "$WORK_DIR/temp/system-prompt-$EPIC_NUM.txt")" < "$WORK_DIR/temp/prompt-sent-$EPIC_NUM.txt"
 EOF
     
     # Remplacer le numéro d'épic dynamiquement

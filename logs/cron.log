@@ -47,3 +47,21 @@ https://github.com/mentorize-app/webapp/issues/1#issuecomment-3220102798
 GraphQL: Could not resolve to an issue or pull request with the number of 101. (repository.issue)
 [2025-08-25 14:40:01] ⚙️ Vérification tâches en attente...
 jq: error (at /home/florian/projets/dulien-orchestration/workflow.json:110): Cannot index string with string "epics"
+[2025-08-25 22:30:01] 🔍 Vérification nouvelles épics...
+[2025-08-25 22:30:01] ⚙️ Vérification tâches en attente...
+jq: error (at /home/florian/projets/dulien-orchestration/workflow.json:127): Cannot index string with string "epics"
+[2025-08-25 22:30:02] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-25 22:30:03] 📊 2 issues trouvées au total
+[2025-08-25 22:30:03] 📋 Nouvelle épic détectée: #6 - [EPIC] correction et alimentation du mcp métiers
+[2025-08-25 22:30:03] 🤖 Démarrage analyse Tech Lead pour épic #6
+[2025-08-25 22:30:03] 🔍 DEBUG: Sauvegarde contexte avant appel Claude Code
+[2025-08-25 22:30:03] 🔍 DEBUG: Prompt length: 3335 characters
+[2025-08-25 22:30:03] 🔍 DEBUG: Chargement du business context
+[2025-08-25 22:30:03] 🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)
+[2025-08-25 22:30:31] 🔍 DEBUG: Claude result length: 1629 characters
+[2025-08-25 22:30:31] 🔍 DEBUG: Claude result preview: Je vais analyser directement l'épic et créer les tâches techniques pour automatiser la mise à jo...
+[2025-08-25 22:30:31] 📄 Résultat analyse Tech Lead reçu
+[2025-08-25 22:30:38] 📝 Workflow mis à jour pour épic #6
+[2025-08-25 22:30:38] ✅ Épic #6 marquée comme analysée
+https://github.com/mentorize-app/infrastructure/issues/6#issuecomment-3221648251
+[2025-08-25 22:30:39] ✅ Epic #6 analysée et workflow mis à jour
