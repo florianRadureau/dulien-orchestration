@@ -1,3 +1,61 @@
 {
-  "epics": {}
+  "epics": {
+    "1": {
+      "analysis": "Ajout de placeholders cohérents sur la page d'accueil pour améliorer l'expérience utilisateur en affichant des messages contextuels quand les sections 'Mentors recommandés', 'Prochains rendez-vous' et 'Fil actualités/articles' sont vides. Cela nécessite la création de composants placeholder réutilisables avec des messages adaptés à chaque contexte, en suivant le même pattern que les formations recommandées existantes.",
+      "workflow": [
+        {
+          "task_id": "webapp-37",
+          "depends_on": [],
+          "priority": 1
+        },
+        {
+          "task_id": "webapp-37",
+          "depends_on": [
+            "webapp-37"
+          ],
+          "priority": 2
+        },
+        {
+          "task_id": "webapp-37",
+          "depends_on": [
+            "webapp-37"
+          ],
+          "priority": 2
+        },
+        {
+          "task_id": "webapp-37",
+          "depends_on": [
+            "webapp-37"
+          ],
+          "priority": 2
+        }
+      ],
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 37,
+          "title": "Créer un composant placeholder réutilisable pour les sections vides",
+          "agent": "webapp"
+        },
+        {
+          "repo": "webapp",
+          "issue_number": 38,
+          "title": "Intégrer les placeholders dans la section 'Mentors recommandés' de la home",
+          "agent": "webapp"
+        },
+        {
+          "repo": "webapp",
+          "issue_number": 39,
+          "title": "Intégrer les placeholders dans la section 'Prochains rendez-vous' de la home",
+          "agent": "webapp"
+        },
+        {
+          "repo": "webapp",
+          "issue_number": 40,
+          "title": "Intégrer les placeholders dans la section 'Fil actualités/articles' de la home",
+          "agent": "webapp"
+        }
+      ]
+    }
+  }
 }

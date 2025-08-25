@@ -22,6 +22,10 @@ get_github_token() {
     get_installation_token
 }
 
+# Initialiser le token GitHub pour MCP
+GITHUB_TOKEN=$(get_github_token)
+export GITHUB_TOKEN
+
 # Créer structure si nécessaire
 mkdir -p "$WORK_DIR"/{agents,logs,temp}
 
@@ -34,8 +38,8 @@ log() {
 init_agents_config() {
     log "🔧 Initialisation configuration agents..."
     
-    # Tech Lead Agent - avec chemin correct vers business-context-mcp
-    cat > "$AGENTS_DIR/tech-lead.json" << 'EOF'
+    # Tech Lead Agent - avec chemin correct vers business-context-mcp et token dynamique
+    cat > "$AGENTS_DIR/tech-lead.json" << EOF
 {
   "mcpServers": {
     "github": {
@@ -237,6 +241,39 @@ if json_lines:
     return 1
 }
 
+# === BUSINESS CONTEXT ===
+
+load_business_context() {
+    local context_dir="/home/florian/projets/business-context-mcp/src/data"
+    local business_context=""
+    
+    # Charger les règles métier
+    if [ -f "$context_dir/business-rules.json" ]; then
+        business_context="$business_context
+
+=== RÈGLES MÉTIER DULIEN/MENTORIZE ===
+$(jq -r '.domains | to_entries[] | "## \(.key | ascii_upcase)\n\(.value.description)\n\n" + (.value.rules | to_entries[] | "### \(.key)\n- **Description**: \(.value.description)\n- **Conditions**: \(.value.conditions | join(", "))\n- **Actions**: \(.value.actions | join(", "))\n")' "$context_dir/business-rules.json" 2>/dev/null || echo "Business rules disponibles")"
+    fi
+    
+    # Charger les patterns techniques
+    if [ -f "$context_dir/patterns.json" ]; then
+        business_context="$business_context
+
+=== PATTERNS TECHNIQUES DULIEN ===
+$(jq -r '.patterns | to_entries[] | "## \(.key | ascii_upcase)\n\(.value.description)\n\n" + (.value.patterns | to_entries[] | "### \(.value.name)\n\(.value.description)\n**Tech**: \(.value.technology // "N/A")\n")' "$context_dir/patterns.json" 2>/dev/null || echo "Patterns techniques disponibles")"
+    fi
+    
+    # Charger le glossaire
+    if [ -f "$context_dir/glossary.json" ]; then
+        business_context="$business_context
+
+=== GLOSSAIRE MÉTIER ===
+$(jq -r '.glossary | to_entries[] | "**\(.key)**: \(.value.definition)"' "$context_dir/glossary.json" 2>/dev/null || echo "Glossaire métier disponible")"
+    fi
+    
+    echo "$business_context"
+}
+
 # === AGENT TECH LEAD ===
 
 analyze_epic() {
@@ -306,18 +343,66 @@ Commence maintenant l'analyse et la création des tâches."
     env | grep -E "(GITHUB|PATH)" > "$WORK_DIR/temp/environment-$epic_number.txt"
     log "🔍 DEBUG: Prompt length: $(echo "$TECH_LEAD_PROMPT" | wc -c) characters"
     
-    # Exécuter Tech Lead Agent avec capture d'erreur complète
-    log "🔍 DEBUG: Démarrage appel Claude Code avec MCP complet"
-    TECH_LEAD_RESULT=$(echo "$TECH_LEAD_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
-        --mcp-config "$AGENTS_DIR/tech-lead.json" \
-        --append-system-prompt "Tu es le Tech Lead Agent Dulien. Tu analyses les épics et crées les tâches techniques distribuées." \
-        --allowed-tools "mcp__github__*,business_context__*" \
-        2> "$WORK_DIR/temp/claude-error-$epic_number.log" \
+    # Charger le business context et le sauvegarder dans un fichier
+    log "🔍 DEBUG: Chargement du business context"
+    load_business_context > "$WORK_DIR/temp/business-context-$epic_number.txt"
+    
+    # Créer le system prompt avec business context
+    cat > "$WORK_DIR/temp/system-prompt-$epic_number.txt" << 'EOF'
+Tu es le Tech Lead Agent Dulien. Tu analyses les épics et crées les tâches techniques distribuées.
+
+BUSINESS CONTEXT DULIEN/MENTORIZE:
+EOF
+    cat "$WORK_DIR/temp/business-context-$epic_number.txt" >> "$WORK_DIR/temp/system-prompt-$epic_number.txt"
+    cat >> "$WORK_DIR/temp/system-prompt-$epic_number.txt" << 'EOF'
+
+CRITICAL: Tu DOIS retourner UNIQUEMENT du JSON valide, rien d'autre. Pas de texte, pas de markdown, pas d'explication.
+
+Structure JSON obligatoire:
+{
+  "analysis": "Description technique de l'épic",
+  "tasks_to_create": [
+    {
+      "repo": "webapp",
+      "title": "Titre de la tâche", 
+      "agent": "webapp"
+    }
+  ],
+  "workflow": [
+    {
+      "task_id": "webapp-TBD",
+      "depends_on": [],
+      "priority": 1
+    }
+  ]
+}
+
+RÉPONDS UNIQUEMENT AVEC CE JSON, RIEN D'AUTRE.
+EOF
+    
+    # Sauvegarder le prompt dans un fichier pour éviter les problèmes d'échappement
+    echo "$TECH_LEAD_PROMPT" > "$WORK_DIR/temp/prompt-sent-$epic_number.txt"
+    
+    # Créer un script temporaire sécurisé
+    cat > "$WORK_DIR/temp/claude-cmd-$epic_number.sh" << 'EOF'
+#!/bin/bash
+WORK_DIR="/home/florian/projets/dulien-orchestration"
+EPIC_NUM="1"
+claude --print --append-system-prompt "$(cat "$WORK_DIR/temp/system-prompt-$EPIC_NUM.txt")" < "$WORK_DIR/temp/prompt-sent-$EPIC_NUM.txt"
+EOF
+    
+    # Remplacer le numéro d'épic dynamiquement
+    sed -i "s/EPIC_NUM=\"1\"/EPIC_NUM=\"$epic_number\"/g" "$WORK_DIR/temp/claude-cmd-$epic_number.sh"
+    chmod +x "$WORK_DIR/temp/claude-cmd-$epic_number.sh"
+    
+    # Exécuter Tech Lead Agent via script temporaire
+    log "🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)"
+    TECH_LEAD_RESULT=$(timeout 60 "$WORK_DIR/temp/claude-cmd-$epic_number.sh" 2> "$WORK_DIR/temp/claude-error-$epic_number.log" \
         || {
-            echo "CLAUDE_EXECUTION_FAILED" > "$WORK_DIR/temp/claude-status-$epic_number.txt"
+            echo "CLAUDE_TIMEOUT_OR_FAILED" > "$WORK_DIR/temp/claude-status-$epic_number.txt"
             echo "Exit code: $?" >> "$WORK_DIR/temp/claude-status-$epic_number.txt"
             echo "Timestamp: $(date)" >> "$WORK_DIR/temp/claude-status-$epic_number.txt"
-            log "❌ Claude Code a échoué pour épic #$epic_number - voir temp/claude-error-$epic_number.log"
+            log "❌ Claude Code timeout/échec pour épic #$epic_number - voir temp/claude-error-$epic_number.log"
             echo "EXECUTION_ERROR"
         })
     
@@ -401,12 +486,12 @@ run_diagnostic_cascade() {
 }
 EOF
     
-    # Test 1: Business Context MCP seulement
-    local business_result=$(echo "$prompt" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
-        --mcp-config "$WORK_DIR/temp/business-only.json" \
-        --allowed-tools "business_context__*" \
-        2> "$WORK_DIR/temp/business-only-error-$epic_number.log" \
-        || echo "BUSINESS_MCP_FAILED")
+    # Test 1: Business Context MCP seulement (avec timeout 30s)
+    local business_result=$(timeout 30 bash -c "echo '$prompt' | GITHUB_TOKEN='$GITHUB_TOKEN' claude --print \
+        --mcp-config '$WORK_DIR/temp/business-only.json' \
+        --allowed-tools 'business_context__*' \
+        2> '$WORK_DIR/temp/business-only-error-$epic_number.log'" \
+        || echo "BUSINESS_MCP_TIMEOUT")
     
     echo "$business_result" > "$WORK_DIR/temp/business-only-result-$epic_number.txt"
     log "🔍 DIAGNOSTIC: Business Context result length: $(echo "$business_result" | wc -c)"

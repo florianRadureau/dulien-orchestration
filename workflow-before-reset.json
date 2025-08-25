@@ -1,0 +1,94 @@
+{
+  "epics": {
+    "1": {
+      "analysis": "Ajout de placeholders visuels cohérents sur la page d'accueil pour les sections vides (mentors, rendez-vous, actualités, articles). Impact uniquement sur la webapp Angular avec réutilisation du pattern existant des formations recommandées.",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 2,
+          "title": "[HOME] Ajouter des placeholders cohérents pour les sections vides",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-2", 
+          "depends_on": [],
+          "priority": 1,
+          "status": "completed"
+        }
+      ]
+    },
+    "2": {
+      "analysis": "Epic de test simple pour valider le workflow orchestrateur. Implémentation d'un composant Angular bouton-test minimal avec template, styles et test unitaire Jest. Aucune interaction backend requise, uniquement côté frontend webapp.",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 1,
+          "title": "[TEST] Créer composant bouton-test Angular",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-1",
+          "depends_on": [],
+          "priority": 1,
+          "status": "completed"
+        }
+      ]
+    },
+    "3": {
+      "analysis": "Création d'un composant Angular standalone moderne pour afficher une alerte de test. Le composant sera développé dans le repo webapp avec une architecture modulaire, incluant des tests unitaires complets pour valider le workflow orchestrateur. L'implémentation utilisera les patterns Angular modernes avec @Input/@Output pour la communication, et sera intégré dans le SharedModule pour réutilisation.",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 101,
+          "title": "[Frontend] Créer composant Angular alerte-test avec tests unitaires",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-101",
+          "depends_on": [],
+          "priority": 1,
+          "status": "completed"
+        }
+      ]
+    },
+    "5": {
+      "analysis": "Cette épic nécessite uniquement des modifications côté webapp (Angular) pour gérer l'expiration du token d'authentification Azure AD. L'implémentation se décompose en deux parties principales : un intercepteur HTTP global pour gérer automatiquement le rafraîchissement du token et détecter les échecs, et un service de gestion de session pour notifier l'utilisateur et effectuer la redirection.",
+      "tasks_created": [
+        {
+          "repo": "webapp",
+          "issue_number": 1001,
+          "title": "[Auth] Implémenter l'intercepteur HTTP pour gérer l'expiration du token avec refresh automatique",
+          "agent": "webapp"
+        },
+        {
+          "repo": "webapp",
+          "issue_number": 1002,
+          "title": "[Auth] Implémenter la notification toast et redirection lors de l'expiration définitive du token",
+          "agent": "webapp"
+        }
+      ],
+      "workflow": [
+        {
+          "task_id": "webapp-1001",
+          "depends_on": [],
+          "priority": 1,
+          "status": "pending"
+        },
+        {
+          "task_id": "webapp-1002",
+          "depends_on": [
+            "webapp-1001"
+          ],
+          "priority": 2,
+          "status": "pending"
+        }
+      ]
+    }
+  }
+}

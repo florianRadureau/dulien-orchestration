@@ -1,0 +1,8 @@
+# Orchestrateur Dulien - Détection nouvelles épics toutes les 15min
+*/15 * * * * cd /home/florian/projets/dulien-orchestration && ./orchestrator-dulien.sh check-epics >> logs/cron.log 2>&1
+
+# Orchestrateur Dulien - Exécution tâches toutes les 5min  
+*/5 * * * * cd /home/florian/projets/dulien-orchestration && ./orchestrator-dulien.sh execute-tasks >> logs/cron.log 2>&1
+
+# Orchestrateur Dulien - Nettoyage logs hebdomadaire
+0 2 * * 0 find /home/florian/projets/dulien-orchestration/logs -name '*.log' -mtime +7 -delete

@@ -9,7 +9,7 @@
     },
     "business-context": {
       "command": "node", 
-      "args": ["/home/florian/projets/business-context-mcp/dist/index.js"]
+      "args": ["../business-context-mcp/dist/index.js"]
     },
     "accessibility": {
       "command": "npx",

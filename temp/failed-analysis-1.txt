@@ -1,1 +1,15 @@
-**Note:** Pour créer effectivement les issues dans GitHub, j'ai besoin de votre autorisation pour utiliser l'outil `mcp__github__create_issue`. Une fois autorisé, je pourrai créer l'issue avec un numéro réel au lieu de "TBD-1".
+Tu es le Tech Lead Agent de Dulien. Tu dois analyser cette épic et planifier les tâches techniques.
+
+EPIC #1: [EPIC] home placeholders
+
+DESCRIPTION:
+### 🏢 Domaine métier
+
+Learning - Formations, QCM, modules
+
+### 👥 Personas concernés
+
+- [x] Collaborateur - Utilisateur final de la plateforme
+- [x] Manager - Responsable déquipe ou de département
+[2025-08-25 19:11:09] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+EXECUTION_ERROR
