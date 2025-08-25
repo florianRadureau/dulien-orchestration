@@ -3,6 +3,9 @@
 # Orchestrateur automatique des agents Dulien via Claude Code CLI
 set -e
 
+# Configuration PATH pour cron (assurer accès à claude CLI)
+export PATH="/home/florian/.nvm/versions/node/v22.18.0/bin:$PATH"
+
 # Configuration
 WORK_DIR="/home/florian/projets/dulien-orchestration"
 WORKFLOW_FILE="$WORK_DIR/workflow.json"
