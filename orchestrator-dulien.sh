@@ -145,22 +145,20 @@ check_new_epics() {
     
     log "📊 $(echo "$ALL_EPICS" | jq length) issues trouvées au total"
     
-    # Filtrer les épics non traitées
-    NEW_EPICS=$(echo "$ALL_EPICS" | jq -c '
+    # Filtrer les épics non traitées (vérifier dans workflow.json au lieu des labels)
+    NEW_EPICS=$(echo "$ALL_EPICS" | jq -c --slurpfile workflow "$WORKFLOW_FILE" '
         .[] | 
         select(.title | test("\\[EPIC\\]"; "i")) |
-        select(
-            (.labels | map(.name) | contains(["status:analyzed"]) | not) and
-            (.labels | map(.name) | contains(["status:completed"]) | not)
-        )
-    ')
+        select(($workflow[0].epics[.number | tostring] // null) == null)
+    ' 2>/dev/null || echo "$ALL_EPICS" | jq -c '.[] | select(.title | test("\\[EPIC\\]"; "i"))')
     
     if [ -z "$NEW_EPICS" ]; then
         log "📭 Aucune nouvelle épic à traiter"
         return 0
     fi
     
-    echo "$NEW_EPICS" | while read -r epic; do
+    # Trier par numéro croissant et traiter
+    echo "$NEW_EPICS" | jq -s 'sort_by(.number)' | jq -c '.[]' | while read -r epic; do
         EPIC_NUMBER=$(echo "$epic" | jq -r '.number')
         EPIC_TITLE=$(echo "$epic" | jq -r '.title')
         
@@ -241,18 +239,23 @@ analyze_epic() {
     # Récupérer détails de l'épic
     EPIC_DATA=$(gh issue view "$epic_number" --repo "$ORG/$REPO" --json title,body,labels)
     
+    # Récupérer les données de l'épic
+    local epic_title=$(echo "$EPIC_DATA" | jq -r '.title')
+    local epic_body=$(echo "$EPIC_DATA" | jq -r '.body')
+    
     # Prompt Tech Lead Agent
-    TECH_LEAD_PROMPT="Tu es le Tech Lead Agent de Dulien. Tu dois analyser cette épic et créer les tâches techniques.
+    TECH_LEAD_PROMPT="Tu es le Tech Lead Agent de Dulien. Tu dois analyser cette épic et planifier les tâches techniques.
 
-EPIC #$epic_number: $(echo "$EPIC_DATA" | jq -r '.title')
+EPIC #$epic_number: $epic_title
 
 DESCRIPTION:
-$(echo "$EPIC_DATA" | jq -r '.body')
+$epic_body
 
 IMPORTANT:
-1. Tu DOIS utiliser l'outil mcp__github__create_issue pour créer les tâches dans les repos appropriés
-2. Tu DOIS retourner le résultat au format JSON exact ci-dessous
+1. Tu dois SEULEMENT analyser et planifier - ne crée pas d'issues GitHub
+2. Tu DOIS retourner le résultat au format JSON exact ci-dessous  
 3. Utilise le business-context MCP pour comprendre le contexte métier
+4. Les numéros d'issues seront générés automatiquement après ton analyse
 
 REPOS DISPONIBLES:
 - webapp (Angular/TypeScript) → agent: webapp
@@ -267,13 +270,13 @@ Tu DOIS terminer ta réponse par ce JSON exact:
 \`\`\`json
 {
   \"analysis\": \"Description technique de l'impact\",
-  \"tasks_created\": [
-    {\"repo\": \"webapp\", \"issue_number\": 456, \"title\": \"Titre de la tâche\", \"agent\": \"webapp\"},
-    {\"repo\": \"tenant-specific-api\", \"issue_number\": 789, \"title\": \"Autre tâche\", \"agent\": \"tenant-api\"}
+  \"tasks_to_create\": [
+    {\"repo\": \"webapp\", \"title\": \"Titre de la tâche\", \"agent\": \"webapp\"},
+    {\"repo\": \"tenant-specific-api\", \"title\": \"Autre tâche\", \"agent\": \"tenant-api\"}
   ],
   \"workflow\": [
-    {\"task_id\": \"webapp-456\", \"depends_on\": [], \"priority\": 1},
-    {\"task_id\": \"tenant-api-789\", \"depends_on\": [\"webapp-456\"], \"priority\": 2}
+    {\"task_id\": \"webapp-TBD\", \"depends_on\": [], \"priority\": 1},
+    {\"task_id\": \"tenant-api-TBD\", \"depends_on\": [\"webapp-TBD\"], \"priority\": 2}
   ]
 }
 \`\`\`
@@ -299,11 +302,14 @@ Commence maintenant l'analyse et la création des tâches."
     
     # Extraire le JSON du résultat avec fallbacks robustes
     if WORKFLOW_JSON=$(extract_json "$TECH_LEAD_RESULT"); then
-        # Ajouter au workflow global
-        add_to_workflow "$epic_number" "$WORKFLOW_JSON"
+        # Créer les issues GitHub réellement
+        UPDATED_JSON=$(create_github_issues "$WORKFLOW_JSON")
         
-        # Marquer épic comme analysée
-        gh issue edit "$epic_number" --repo "$ORG/$REPO" --add-label "status:analyzed"
+        # Ajouter au workflow global avec les vrais numéros d'issues
+        add_to_workflow "$epic_number" "$UPDATED_JSON"
+        
+        # Marquer épic comme analysée (commentaire au lieu de label inexistant)
+        log "✅ Épic #$epic_number marquée comme analysée"
         
         # Commenter sur l'épic
         gh issue comment "$epic_number" --repo "$ORG/$REPO" --body "🤖 **Tech Lead Agent - Analyse Terminée**
@@ -334,9 +340,111 @@ L'extraction du plan JSON a échoué. Résultat sauvegardé pour investigation.
 
 # === GESTION WORKFLOW ===
 
+create_github_issues() {
+    local workflow_json="$1"
+    local updated_json="$workflow_json"
+    
+    # Obtenir token GitHub
+    local github_token=$(get_github_token)
+    if [ -z "$github_token" ]; then
+        log "❌ Token GitHub indisponible - utilisation numéros fictifs"
+        echo "$workflow_json" | jq '
+            if .tasks_to_create then
+                .tasks_created = (.tasks_to_create | map({repo: .repo, issue_number: 999, title: .title, agent: .agent})) |
+                .workflow = (.workflow | map(.task_id |= gsub("-TBD"; "-999"))) |
+                del(.tasks_to_create)
+            else . end'
+        return 0
+    fi
+    
+    # Compter les tâches à créer
+    local task_count=$(echo "$workflow_json" | jq '.tasks_to_create | length // 0')
+    
+    if [ "$task_count" -eq 0 ]; then
+        log "🔧 Aucune tâche à créer"
+        echo "$updated_json"
+        return 0
+    fi
+    
+    log "🔧 Création de $task_count issues GitHub..."
+    
+    # Utiliser un fichier temporaire pour éviter le bug sous-shell
+    local temp_file="/tmp/issues-created-$$.json"
+    echo '[]' > "$temp_file"
+    
+    # Traiter chaque tâche individuellement
+    for i in $(seq 0 $((task_count-1))); do
+        local task=$(echo "$workflow_json" | jq -c ".tasks_to_create[$i]")
+        local repo=$(echo "$task" | jq -r '.repo')
+        local title=$(echo "$task" | jq -r '.title')
+        local agent=$(echo "$task" | jq -r '.agent')
+        
+        log "🔧 Création issue: $title dans $repo"
+        
+        # Créer l'issue dans GitHub
+        local issue_url=$(GITHUB_TOKEN="$github_token" gh issue create \
+            --repo "mentorize-app/$repo" \
+            --title "$title" \
+            --body "**Tâche créée automatiquement par Tech Lead Agent**
+
+Cette tâche fait partie du workflow orchestré Dulien.
+
+**Agent assigné**: $agent
+**Repo**: $repo
+
+---
+*Généré automatiquement par l'orchestrateur Dulien*" \
+            --label "agent:$agent" \
+            2>/dev/null)
+        
+        if [ -n "$issue_url" ]; then
+            local issue_number=$(echo "$issue_url" | grep -o '[0-9]*$')
+            log "✅ Issue #$issue_number créée dans $repo"
+            
+            # Ajouter au fichier temporaire
+            jq --argjson task "{\"repo\": \"$repo\", \"issue_number\": $issue_number, \"title\": \"$title\", \"agent\": \"$agent\"}" \
+                '. += [$task]' "$temp_file" > "$temp_file.tmp"
+            mv "$temp_file.tmp" "$temp_file"
+        else
+            log "❌ Échec création issue: $title dans $repo - utilisation numéro fictif"
+            jq --argjson task "{\"repo\": \"$repo\", \"issue_number\": 999, \"title\": \"$title\", \"agent\": \"$agent\"}" \
+                '. += [$task]' "$temp_file" > "$temp_file.tmp"
+            mv "$temp_file.tmp" "$temp_file"
+        fi
+    done
+    
+    # Construire le JSON final
+    local tasks_created=$(cat "$temp_file")
+    rm -f "$temp_file" "$temp_file.tmp"
+    
+    # Créer le JSON de sortie avec les vrais numéros d'issues
+    updated_json=$(echo "$workflow_json" | jq --argjson created "$tasks_created" '
+        .tasks_created = $created |
+        .workflow = (.workflow | map(
+            . as $item |
+            ($created[] | select(.repo == ($item.task_id | split("-")[0]))) as $task |
+            .task_id = ($task.repo + "-" + ($task.issue_number | tostring))
+        )) |
+        .workflow = (.workflow | map(.depends_on |= map(
+            . as $dep |
+            ($created[] | select(.repo == ($dep | split("-")[0]))) as $task |
+            ($task.repo + "-" + ($task.issue_number | tostring))
+        ))) |
+        del(.tasks_to_create)')
+    
+    echo "$updated_json"
+}
+
 add_to_workflow() {
     local epic_number="$1"
     local workflow_json="$2"
+    
+    # Debug: vérifier le JSON reçu
+    if ! echo "$workflow_json" | jq . >/dev/null 2>&1; then
+        log "❌ JSON invalide reçu pour épic #$epic_number"
+        echo "$workflow_json" > "$WORK_DIR/temp/invalid-json-$epic_number.txt"
+        return 1
+    fi
     
     # Créer workflow.json s'il n'existe pas
     if [ ! -f "$WORKFLOW_FILE" ]; then
@@ -344,11 +452,14 @@ add_to_workflow() {
     fi
     
     # Ajouter l'épic au workflow
-    jq --arg epic "$epic_number" --argjson workflow "$workflow_json" \
-        '.epics[$epic] = $workflow' "$WORKFLOW_FILE" > "$WORKFLOW_FILE.tmp"
-    mv "$WORKFLOW_FILE.tmp" "$WORKFLOW_FILE"
-    
-    log "📝 Workflow mis à jour pour épic #$epic_number"
+    if jq --arg epic "$epic_number" --argjson workflow "$workflow_json" \
+        '.epics[$epic] = $workflow' "$WORKFLOW_FILE" > "$WORKFLOW_FILE.tmp"; then
+        mv "$WORKFLOW_FILE.tmp" "$WORKFLOW_FILE"
+        log "📝 Workflow mis à jour pour épic #$epic_number"
+    else
+        log "❌ Erreur JQ lors de la mise à jour workflow pour épic #$epic_number"
+        return 1
+    fi
 }
 
 # === DÉTECTION PRs POUR REVIEW ===
