@@ -179,7 +179,7 @@ extract_json() {
     local input="$1"
     local result=""
     
-    # Method 1: sed extraction entre ```json markers
+    # Method 1: Simple sed extraction entre ```json markers
     result=$(echo "$input" | sed -n '/```json/,/```/p' | sed '1d;$d' | head -c 10000)
     if [ -n "$result" ] && echo "$result" | jq . >/dev/null 2>&1; then
         echo "$result"
@@ -193,48 +193,11 @@ extract_json() {
         return 0
     fi
     
-    # Method 3: grep + tail/head extraction  
-    result=$(echo "$input" | grep -A 1000 '```json' | grep -B 1000 '```' | head -n -1 | tail -n +2 | head -c 10000)
-    if [ -n "$result" ] && echo "$result" | jq . >/dev/null 2>&1; then
-        echo "$result"
-        return 0
-    fi
-    
-    # Method 4: JSON pur après lignes de log (pour create_github_issues)
+    # Method 3: JSON pur après lignes de log (pour create_github_issues)
     result=$(echo "$input" | awk '/^{/ {p=1} p {print}' | head -c 10000)
     if [ -n "$result" ] && echo "$result" | jq . >/dev/null 2>&1; then
         echo "$result"
         return 0
-    fi
-    
-    # Method 5: Python fallback si disponible
-    if command -v python3 >/dev/null 2>&1; then
-        result=$(echo "$input" | python3 -c "
-import sys, json
-lines = sys.stdin.read().splitlines()
-in_json = False
-json_lines = []
-for line in lines:
-    if '```json' in line:
-        in_json = True
-        continue
-    elif '```' in line and in_json:
-        break
-    elif in_json:
-        json_lines.append(line)
-        
-if json_lines:
-    json_str = '\n'.join(json_lines).strip()
-    try:
-        json.loads(json_str)
-        print(json_str)
-    except:
-        pass
-" 2>/dev/null)
-        if [ -n "$result" ]; then
-            echo "$result"
-            return 0
-        fi
     fi
     
     log "❌ Échec extraction JSON avec toutes les méthodes"
@@ -362,21 +325,30 @@ EOF
     cat "$WORK_DIR/temp/business-context-$epic_number.txt" >> "$WORK_DIR/temp/system-prompt-$epic_number.txt"
     cat >> "$WORK_DIR/temp/system-prompt-$epic_number.txt" << 'EOF'
 
-INSTRUCTIONS CRITIQUES:
-- Tu DOIS analyser le code existant avant de créer des tâches
-- Tu DOIS réutiliser les composants existants (EmptyStateComponent, etc.)
-- Tu DOIS spécifier les fichiers exacts à modifier dans les titres de tâches
-- Tu DOIS éviter de créer de nouveaux composants si des existants conviennent
-- Tu DOIS retourner UNIQUEMENT du JSON valide, rien d'autre
+INSTRUCTIONS CRITIQUES OBLIGATOIRES:
 
-Structure JSON obligatoire:
+1. **CRÉER UNE SEULE TÂCHE PAR ÉPIC** (pas 4 ou 5 tâches séparées!)
+2. **ANALYSER LE CODE EXISTANT** avant de proposer des solutions
+3. **RÉUTILISER LES COMPOSANTS EXISTANTS** (AuthInterceptor, EmptyStateComponent, etc.)
+4. **BODY DÉTAILLÉ OBLIGATOIRE** avec sous-tâches techniques numérotées
+
+RÈGLES STRICTES:
+- Maximum 1-2 tâches dans "tasks_to_create" (idéalement 1 seule)
+- Le champ "body" est OBLIGATOIRE et doit contenir :
+  - Contexte technique avec fichiers existants à modifier
+  - Liste de sous-tâches numérotées (minimum 5-10 sous-tâches)
+  - Références précises aux composants/services existants
+  - Acceptance criteria techniques
+
+Structure JSON OBLIGATOIRE:
 {
-  "analysis": "Description technique de l'épic",
+  "analysis": "Description technique détaillée de l'épic avec contexte architectural",
   "tasks_to_create": [
     {
       "repo": "webapp",
-      "title": "Titre de la tâche", 
-      "agent": "webapp"
+      "title": "Titre résumant TOUT le besoin fonctionnel", 
+      "agent": "webapp",
+      "body": "## 🎯 Objectif\n[Description du besoin]\n\n## 📝 Contexte technique\n[Composants existants, architecture]\n\n## ✅ Sous-tâches à réaliser\n\n- [ ] 1. [Première sous-tâche avec fichier spécifique]\n- [ ] 2. [Deuxième sous-tâche]\n- [ ] 3. [Troisième sous-tâche]\n[...minimum 5-10 sous-tâches...]\n\n## 📁 Fichiers à modifier\n- `path/to/file1.ts` : [description]\n- `path/to/file2.ts` : [description]\n\n## 🔍 Acceptance Criteria\n- [Critère 1]\n- [Critère 2]\n\n## ⚠️ Points d'attention\n[Risques, dépendances, etc.]"
     }
   ],
   "workflow": [
@@ -394,12 +366,20 @@ EOF
     # Sauvegarder le prompt dans un fichier pour éviter les problèmes d'échappement
     echo "$TECH_LEAD_PROMPT" > "$WORK_DIR/temp/prompt-sent-$epic_number.txt"
     
-    # Créer un script temporaire sécurisé
+    # Validation du prompt envoyé
+    if grep -q "CRÉER UNE SEULE TÂCHE PAR ÉPIC" "$WORK_DIR/temp/system-prompt-$epic_number.txt"; then
+        log "✅ Validation: Instructions '1 tâche par épic' présentes dans le prompt"
+    else
+        log "❌ ERREUR: Instructions '1 tâche par épic' MANQUANTES dans le prompt!"
+        echo "PROMPT_VALIDATION_FAILED: Missing task limit instruction" >> "$WORK_DIR/temp/validation-error.txt"
+    fi
+    
+    # Créer un script temporaire sécurisé SANS MCP pour éviter les erreurs
     cat > "$WORK_DIR/temp/claude-cmd-$epic_number.sh" << 'EOF'
 #!/bin/bash
 WORK_DIR="/home/florian/projets/dulien-orchestration"
 EPIC_NUM="1"
-claude --print --mcp-config "$WORK_DIR/agents/tech-lead.json" --append-system-prompt "$(cat "$WORK_DIR/temp/system-prompt-$EPIC_NUM.txt")" < "$WORK_DIR/temp/prompt-sent-$EPIC_NUM.txt"
+claude --print --append-system-prompt "$(cat "$WORK_DIR/temp/system-prompt-$EPIC_NUM.txt")" < "$WORK_DIR/temp/prompt-sent-$EPIC_NUM.txt"
 EOF
     
     # Remplacer le numéro d'épic dynamiquement
@@ -641,7 +621,33 @@ create_github_issues() {
         return 0
     fi
     
-    log "🔧 Création de $task_count issues GitHub..."
+    # ⚠️ VALIDATION STRICTE : Refuser plus de 2 tâches par épic
+    if [ "$task_count" -gt 2 ]; then
+        log "❌ ERREUR: Tech Lead Agent a créé $task_count tâches (>2) - VIOLATION des consignes!"
+        log "❌ Refus de création des issues - Tech Lead doit respecter '1 tâche par épic'"
+        
+        # Sauvegarder l'erreur pour diagnostic
+        echo "VALIDATION_FAILED: $task_count tasks > 2 limit" > "$WORK_DIR/temp/validation-error.txt"
+        echo "Timestamp: $(date)" >> "$WORK_DIR/temp/validation-error.txt"
+        echo "$workflow_json" > "$WORK_DIR/temp/rejected-workflow.json"
+        
+        # Retourner le JSON original sans créer les issues
+        echo "$updated_json"
+        return 1
+    fi
+    
+    # Vérifier que chaque tâche a un body détaillé
+    for i in $(seq 0 $((task_count-1))); do
+        local body_content=$(echo "$workflow_json" | jq -r ".tasks_to_create[$i].body // \"\"")
+        if [ -z "$body_content" ] || [ "$body_content" = "null" ] || [ ${#body_content} -lt 100 ]; then
+            log "❌ ERREUR: Tâche #$i sans body détaillé (${#body_content} caractères < 100)"
+            echo "BODY_VALIDATION_FAILED: Task $i missing detailed body" >> "$WORK_DIR/temp/validation-error.txt"
+            echo "$updated_json"
+            return 1
+        fi
+    done
+    
+    log "🔧 Validation OK: $task_count tâches avec body détaillé - Création des issues GitHub..."
     
     # Utiliser un fichier temporaire pour éviter le bug sous-shell
     local temp_file="/tmp/issues-created-$$.json"
@@ -656,11 +662,12 @@ create_github_issues() {
         
         log "🔧 Création issue: $title dans $repo"
         
-        # Créer l'issue dans GitHub
-        local issue_url=$(GITHUB_TOKEN="$github_token" gh issue create \
-            --repo "mentorize-app/$repo" \
-            --title "$title" \
-            --body "**Tâche créée automatiquement par Tech Lead Agent**
+        # Récupérer le body détaillé si présent
+        local body_content=$(echo "$task" | jq -r '.body // ""')
+        
+        # Si pas de body détaillé, utiliser le template par défaut
+        if [ -z "$body_content" ] || [ "$body_content" = "null" ]; then
+            body_content="**Tâche créée automatiquement par Tech Lead Agent**
 
 Cette tâche fait partie du workflow orchestré Dulien.
 
@@ -668,7 +675,29 @@ Cette tâche fait partie du workflow orchestré Dulien.
 **Repo**: $repo
 
 ---
-*Généré automatiquement par l'orchestrateur Dulien*" \
+*Généré automatiquement par l'orchestrateur Dulien*"
+        else
+            # Ajouter l'en-tête et le pied de page au body détaillé
+            body_content="**Tâche créée automatiquement par Tech Lead Agent**
+
+Cette tâche fait partie du workflow orchestré Dulien.
+
+**Agent assigné**: $agent
+**Repo**: $repo
+
+## 📋 Description détaillée
+
+$body_content
+
+---
+*Généré automatiquement par l'orchestrateur Dulien*"
+        fi
+        
+        # Créer l'issue dans GitHub
+        local issue_url=$(GITHUB_TOKEN="$github_token" gh issue create \
+            --repo "mentorize-app/$repo" \
+            --title "$title" \
+            --body "$body_content" \
             --label "agent:$agent" \
             2>/dev/null)
         
@@ -880,6 +909,7 @@ execute_pending_tasks() {
     
     # Chercher tâches prêtes à exécuter (dépendances satisfaites)
     READY_TASKS=$(jq -r '
+        . as $root |
         .epics | to_entries | .[] | 
         .value.tasks_created[] as $task |
         .value.workflow[] | 
@@ -887,7 +917,7 @@ execute_pending_tasks() {
         select(.status // "pending" == "pending") |
         select((.depends_on // []) | length == 0 or 
                all(. as $dep | $dep | . as $dep_id | 
-                   (.epics | .. | objects | select(.task_id? == $dep_id) | .status? == "completed"))) |
+                   ($root.epics | .. | objects | select(.task_id? == $dep_id) | .status? == "completed"))) |
         {task_id: .task_id, repo: $task.repo, issue: $task.issue_number, agent: $task.agent, epic: .key}
     ' "$WORKFLOW_FILE")
     

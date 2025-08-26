@@ -1,3 +1,0 @@
-CLAUDE_TIMEOUT_OR_FAILED
-Exit code: 0
-Timestamp: lun. 25 août 2025 19:15:21 CEST
