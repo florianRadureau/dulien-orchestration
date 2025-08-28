@@ -1,0 +1,44 @@
+[
+  {
+    "timestamp": "2025-08-27T22:29:57Z",
+    "type": "close_epic",
+    "repo": "infrastructure",
+    "number": 5,
+    "status": "completed"
+  },
+  {
+    "timestamp": "2025-08-27T22:45:06Z",
+    "type": "create_epics",
+    "repo": "webapp",
+    "number": 3,
+    "status": "completed"
+  },
+  {
+    "timestamp": "2025-08-27T22:45:06Z",
+    "type": "create_epics",
+    "repo": "infrastructure",
+    "number": 2,
+    "status": "completed"
+  },
+  {
+    "timestamp": "2025-08-27T22:58:38Z",
+    "type": "decompose_epic",
+    "repo": "webapp",
+    "number": 70,
+    "status": "started"
+  },
+  {
+    "timestamp": "2025-08-27T22:58:38Z",
+    "type": "decompose_epic",
+    "repo": "webapp",
+    "number": 71,
+    "status": "started"
+  },
+  {
+    "timestamp": "2025-08-27T22:58:38Z",
+    "type": "decompose_epic",
+    "repo": "infrastructure",
+    "number": 14,
+    "status": "started"
+  }
+]
