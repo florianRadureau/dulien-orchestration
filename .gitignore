@@ -1,0 +1,34 @@
+# Logs - ne jamais commiter
+logs/
+*.log
+
+# Cache et fichiers temporaires
+cache/
+temp/
+*.tmp
+
+# Fichiers de configuration sensibles avec tokens
+agents/*.json
+
+# Sauvegardes et anciens fichiers
+workflow-*.json
+temp_*.json
+*.backup
+*.bak
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Node modules si ajoutés
+node_modules/
+
+# Fichiers d'environnement
+.env
+.env.local
+.env.production
+
+# Archives de logs
+logs-archive/
+*.tar.gz
+*.zippython/venv/

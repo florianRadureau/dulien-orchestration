@@ -1346,3 +1346,164 @@ EX...
 [2025-08-26 09:46:04] 📄 Résultat analyse Tech Lead reçu
 [2025-08-26 09:46:04] ❌ Échec extraction JSON avec toutes les méthodes
 [2025-08-26 09:46:04] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-26 09:48:27] 🔍 Vérification nouvelles épics...
+[2025-08-26 09:48:29] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-26 09:48:30] 📊 1 issues trouvées au total
+[2025-08-26 09:48:30] 📭 Aucune nouvelle épic à traiter
+[2025-08-26 09:48:58] ⚙️ Vérification tâches en attente...
+[2025-08-26 09:48:58] 🚀 Exécution tâche webapp-55
+[2025-08-26 09:48:58] 🤖 Démarrage agent webapp pour tâche webapp#55
+[2025-08-26 09:50:01] ⚙️ Vérification tâches en attente...
+[2025-08-26 09:50:01] 🚀 Exécution tâche webapp-55
+[2025-08-26 09:50:01] 🤖 Démarrage agent webapp pour tâche webapp#55
+[2025-08-26 09:56:26] 📄 Webapp Agent terminé pour webapp-55
+[2025-08-26 09:56:26] ✅ Tâche webapp-55 marquée comme review_requested
+[2025-08-26 10:00:00] 📄 Webapp Agent terminé pour webapp-55
+[2025-08-26 10:00:00] ✅ Tâche webapp-55 marquée comme review_requested
+[2025-08-26 10:00:01] ⚙️ Vérification tâches en attente...
+[2025-08-26 10:00:01] 🔍 Vérification nouvelles épics...
+[2025-08-26 10:00:01] 🚀 Exécution tâche webapp-55
+[2025-08-26 10:00:01] 🤖 Démarrage agent webapp pour tâche webapp#55
+[2025-08-26 10:00:03] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-26 10:00:04] 📊 2 issues trouvées au total
+[2025-08-26 10:00:04] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-26 10:00:04] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-26 10:00:04] 🔍 DEBUG: Sauvegarde contexte avant appel Claude Code
+[2025-08-26 10:00:04] 🔍 DEBUG: Prompt length: 3086 characters
+[2025-08-26 10:00:04] 🔍 DEBUG: Chargement du business context
+[2025-08-26 10:00:04] ✅ Validation: Instructions '1 tâche par épic' présentes dans le prompt
+[2025-08-26 10:00:04] 🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)
+[2025-08-26 10:01:04] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+[2025-08-26 10:01:04] 🔍 DEBUG: Claude result length: 114 characters
+[2025-08-26 10:01:04] 🔍 DEBUG: Claude result preview: [2025-08-26 10:01:04] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+EX...
+[2025-08-26 10:01:04] 📄 Résultat analyse Tech Lead reçu
+[2025-08-26 10:01:04] ❌ Échec extraction JSON avec toutes les méthodes
+[2025-08-26 10:01:04] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-26 10:02:35] 📄 Webapp Agent terminé pour webapp-55
+[2025-08-26 10:02:35] ✅ Tâche webapp-55 marquée comme review_requested
+[2025-08-26 10:05:01] ⚙️ Vérification tâches en attente...
+[2025-08-26 10:05:01] 🚀 Exécution tâche webapp-55
+[2025-08-26 10:05:01] 🤖 Démarrage agent webapp pour tâche webapp#55
+[2025-08-26 10:08:27] 📄 Webapp Agent terminé pour webapp-55
+[2025-08-26 10:08:27] ✅ Tâche webapp-55 marquée comme review_requested
+[2025-08-26 10:10:01] ⚙️ Vérification tâches en attente...
+[2025-08-26 10:10:01] 🚀 Exécution tâche webapp-55
+[2025-08-26 10:10:01] 🤖 Démarrage agent webapp pour tâche webapp#55
+[2025-08-26 10:13:17] 📄 Webapp Agent terminé pour webapp-55
+[2025-08-26 10:13:17] ✅ Tâche webapp-55 marquée comme review_requested
+[2025-08-26 10:15:01] ⚙️ Vérification tâches en attente...
+[2025-08-26 10:15:01] 🔍 Vérification nouvelles épics...
+[2025-08-26 10:15:01] 🚀 Exécution tâche webapp-55
+[2025-08-26 10:15:01] 🤖 Démarrage agent webapp pour tâche webapp#55
+[2025-08-26 10:15:03] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-26 10:15:04] 📊 2 issues trouvées au total
+[2025-08-26 10:15:04] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-26 10:15:04] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-26 10:15:05] 🔍 DEBUG: Sauvegarde contexte avant appel Claude Code
+[2025-08-26 10:15:05] 🔍 DEBUG: Prompt length: 3086 characters
+[2025-08-26 10:15:05] 🔍 DEBUG: Chargement du business context
+[2025-08-26 10:15:05] ✅ Validation: Instructions '1 tâche par épic' présentes dans le prompt
+[2025-08-26 10:15:05] 🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)
+[2025-08-26 10:16:05] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+[2025-08-26 10:16:05] 🔍 DEBUG: Claude result length: 114 characters
+[2025-08-26 10:16:05] 🔍 DEBUG: Claude result preview: [2025-08-26 10:16:05] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+EX...
+[2025-08-26 10:16:05] 📄 Résultat analyse Tech Lead reçu
+[2025-08-26 10:16:05] ❌ Échec extraction JSON avec toutes les méthodes
+[2025-08-26 10:16:05] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-26 10:17:18] 📄 Webapp Agent terminé pour webapp-55
+[2025-08-26 10:17:18] ✅ Tâche webapp-55 marquée comme review_requested
+[2025-08-26 10:20:01] ⚙️ Vérification tâches en attente...
+[2025-08-26 10:20:01] 🚀 Exécution tâche webapp-55
+[2025-08-26 10:20:01] 🤖 Démarrage agent webapp pour tâche webapp#55
+[2025-08-26 10:22:10] 📄 Webapp Agent terminé pour webapp-55
+[2025-08-26 10:22:10] ✅ Tâche webapp-55 marquée comme review_requested
+[2025-08-26 10:22:50] 🔍 Vérification nouvelles épics...
+[2025-08-26 10:22:52] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-26 10:22:53] 📊 2 issues trouvées au total
+[2025-08-26 10:22:53] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-26 10:22:53] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-26 10:22:54] 🔍 DEBUG: Sauvegarde contexte avant appel Claude Code
+[2025-08-26 10:22:54] 🔍 DEBUG: Prompt length: 3086 characters
+[2025-08-26 10:22:54] 🔍 DEBUG: Chargement du business context
+[2025-08-26 10:22:54] ✅ Validation: Instructions '1 tâche par épic' présentes dans le prompt
+[2025-08-26 10:22:54] 🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)
+[2025-08-26 10:23:54] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+[2025-08-26 10:23:54] 🔍 DEBUG: Claude result length: 114 characters
+[2025-08-26 10:23:54] 🔍 DEBUG: Claude result preview: [2025-08-26 10:23:54] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+EX...
+[2025-08-26 10:23:54] 📄 Résultat analyse Tech Lead reçu
+[2025-08-26 10:23:54] ❌ Échec extraction JSON avec toutes les méthodes
+[2025-08-26 10:23:54] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-26 10:37:30] 🔍 Vérification nouvelles épics...
+[2025-08-26 10:37:32] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-26 10:37:33] 📊 2 issues trouvées au total
+[2025-08-26 10:37:33] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-26 10:37:33] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-26 10:37:33] 🔍 DEBUG: Sauvegarde contexte avant appel Claude Code
+[2025-08-26 10:37:33] 🔍 DEBUG: Prompt length: 3086 characters
+[2025-08-26 10:37:33] 🔍 DEBUG: Chargement du business context
+[2025-08-26 10:37:33] ✅ Validation: Instructions '1 tâche par épic' présentes dans le prompt
+[2025-08-26 10:37:33] 🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)
+[2025-08-26 10:38:33] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+[2025-08-26 10:38:33] 🔍 DEBUG: Claude result length: 114 characters
+[2025-08-26 10:38:33] 🔍 DEBUG: Claude result preview: [2025-08-26 10:38:33] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+EX...
+[2025-08-26 10:38:33] 📄 Résultat analyse Tech Lead reçu
+[2025-08-26 10:38:33] ❌ Échec extraction JSON avec toutes les méthodes
+[2025-08-26 10:38:33] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-26 10:56:05] 🔍 Vérification nouvelles épics...
+[2025-08-26 10:56:07] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-26 10:56:08] 📊 2 issues trouvées au total
+[2025-08-26 10:56:08] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-26 10:56:08] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-26 10:56:08] 🔍 DEBUG: Sauvegarde contexte avant appel Claude Code
+[2025-08-26 10:56:08] 🔍 DEBUG: Prompt length: 3086 characters
+[2025-08-26 10:56:08] 🔍 DEBUG: Chargement du business context
+[2025-08-26 10:56:08] ✅ Validation: Instructions '1 tâche par épic' présentes dans le prompt
+[2025-08-26 10:56:08] 🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)
+[2025-08-26 10:57:08] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+[2025-08-26 10:57:08] 🔍 DEBUG: Claude result length: 114 characters
+[2025-08-26 10:57:08] 🔍 DEBUG: Claude result preview: [2025-08-26 10:57:08] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+EX...
+[2025-08-26 10:57:08] 📄 Résultat analyse Tech Lead reçu
+[2025-08-26 10:57:08] ❌ Échec extraction JSON avec toutes les méthodes
+[2025-08-26 10:57:09] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-26 10:59:03] 🔍 Vérification nouvelles épics...
+[2025-08-26 10:59:05] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-26 10:59:06] 📊 2 issues trouvées au total
+[2025-08-26 10:59:06] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-26 10:59:06] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-26 10:59:06] 🔍 DEBUG: Sauvegarde contexte avant appel Claude Code
+[2025-08-26 10:59:06] 🔍 DEBUG: Prompt length: 3086 characters
+[2025-08-26 10:59:06] 🔍 DEBUG: Création system prompt simplifié avec MCP
+[2025-08-26 10:59:06] ✅ Validation: Instructions '1 tâche par épic' présentes dans le prompt
+[2025-08-26 10:59:06] 🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)
+[2025-08-26 10:59:20] 🔍 DEBUG: Claude result length: 468 characters
+[2025-08-26 10:59:20] 🔍 DEBUG: Claude result preview: {"type":"result","subtype":"error_during_execution","duration_ms":12350,"duration_api_ms":13426,"is_...
+[2025-08-26 10:59:20] 📄 Résultat analyse Tech Lead reçu
+[2025-08-26 10:59:20] 🔧 Aucune tâche à créer
+[2025-08-26 10:59:20] 📝 Workflow mis à jour pour épic #1
+[2025-08-26 10:59:20] ✅ Épic #1 marquée comme analysée
+[2025-08-26 10:59:22] ✅ Epic #1 analysée et workflow mis à jour
+[2025-08-26 11:01:35] 🔍 Vérification nouvelles épics...
+[2025-08-26 11:01:37] 🔎 Recherche des épics dans mentorize-app/infrastructure...
+[2025-08-26 11:01:38] 📊 2 issues trouvées au total
+[2025-08-26 11:01:38] 📋 Nouvelle épic détectée: #1 - [EPIC] home placeholders
+[2025-08-26 11:01:38] 🤖 Démarrage analyse Tech Lead pour épic #1
+[2025-08-26 11:01:39] 🔍 DEBUG: Sauvegarde contexte avant appel Claude Code
+[2025-08-26 11:01:39] 🔍 DEBUG: Prompt length: 3086 characters
+[2025-08-26 11:01:39] 🔍 DEBUG: Création system prompt simplifié avec MCP
+[2025-08-26 11:01:39] ✅ Validation: Instructions '1 tâche par épic' présentes dans le prompt
+[2025-08-26 11:01:39] 🔍 DEBUG: Démarrage appel Claude Code avec business context intégré (timeout 60s)
+[2025-08-26 11:02:39] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+[2025-08-26 11:02:39] 🔍 DEBUG: Claude result length: 114 characters
+[2025-08-26 11:02:39] 🔍 DEBUG: Claude result preview: [2025-08-26 11:02:39] ❌ Claude Code timeout/échec pour épic #1 - voir temp/claude-error-1.log
+EX...
+[2025-08-26 11:02:39] 📄 Résultat analyse Tech Lead reçu
+[2025-08-26 11:02:39] ❌ Échec extraction JSON avec toutes les méthodes
+[2025-08-26 11:02:39] ❌ Erreur: impossible d'extraire le JSON du résultat Tech Lead
+[2025-08-26 11:05:15] ⚙️ Vérification tâches en attente...
+[2025-08-26 11:05:15] 🚀 Exécution tâche webapp-59
+[2025-08-26 11:05:15] 🤖 Démarrage agent webapp pour tâche webapp#59

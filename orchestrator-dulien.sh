@@ -179,21 +179,37 @@ extract_json() {
     local input="$1"
     local result=""
     
-    # Method 1: Simple sed extraction entre ```json markers
+    # Method 1: Extraction depuis le nouveau format Claude Code --output-format json
+    if echo "$input" | jq . >/dev/null 2>&1; then
+        # Vérifier si c'est une réponse Claude Code avec succès
+        if echo "$input" | jq -e '.subtype == "success"' >/dev/null 2>&1; then
+            # Extraire le champ "result" et chercher le JSON dedans
+            result=$(echo "$input" | jq -r '.result' 2>/dev/null | sed -n '/```json/,/```/p' | sed '1d;$d' | head -c 10000)
+            if [ -n "$result" ] && echo "$result" | jq . >/dev/null 2>&1; then
+                echo "$result"
+                return 0
+            fi
+        elif echo "$input" | jq -e '.subtype == "error_during_execution"' >/dev/null 2>&1; then
+            log "❌ Claude a rencontré une erreur d'exécution (probablement MCP)"
+            return 1
+        fi
+    fi
+    
+    # Method 2: Simple sed extraction entre ```json markers (ancien format)
     result=$(echo "$input" | sed -n '/```json/,/```/p' | sed '1d;$d' | head -c 10000)
     if [ -n "$result" ] && echo "$result" | jq . >/dev/null 2>&1; then
         echo "$result"
         return 0
     fi
     
-    # Method 2: awk extraction
+    # Method 3: awk extraction
     result=$(echo "$input" | awk '/```json/,/```/ {if (!/```/) print}' | head -c 10000)
     if [ -n "$result" ] && echo "$result" | jq . >/dev/null 2>&1; then
         echo "$result"
         return 0
     fi
     
-    # Method 3: JSON pur après lignes de log (pour create_github_issues)
+    # Method 4: JSON pur après lignes de log (pour create_github_issues)
     result=$(echo "$input" | awk '/^{/ {p=1} p {print}' | head -c 10000)
     if [ -n "$result" ] && echo "$result" | jq . >/dev/null 2>&1; then
         echo "$result"
@@ -307,23 +323,18 @@ Commence maintenant l'analyse et la création des tâches."
     log "🔍 DEBUG: Prompt length: $(echo "$TECH_LEAD_PROMPT" | wc -c) characters"
     
     # Charger le business context et le sauvegarder dans un fichier
-    log "🔍 DEBUG: Chargement du business context"
-    load_business_context > "$WORK_DIR/temp/business-context-$epic_number.txt"
+    log "🔍 DEBUG: Création system prompt simplifié avec MCP"
     
-    # Créer le system prompt avec business et technical context
+    # Créer un system prompt SIMPLIFIÉ utilisant les MCP directement  
     cat > "$WORK_DIR/temp/system-prompt-$epic_number.txt" << 'EOF'
 Tu es le Tech Lead Agent Dulien. Tu analyses les épics et crées les tâches techniques distribuées.
 
 AVANT DE RÉPONDRE, tu DOIS obligatoirement :
 1. Utiliser technical_context__get_page_structure pour analyser la page concernée
 2. Utiliser technical_context__search_similar_components pour identifier les composants existants
-3. Utiliser technical_context__get_technical_components pour comprendre les composants disponibles
-4. Utiliser business_context__* si nécessaire pour le contexte métier
+3. Utiliser business_context__search_glossary si nécessaire pour le contexte métier
 
-BUSINESS CONTEXT DULIEN/MENTORIZE:
-EOF
-    cat "$WORK_DIR/temp/business-context-$epic_number.txt" >> "$WORK_DIR/temp/system-prompt-$epic_number.txt"
-    cat >> "$WORK_DIR/temp/system-prompt-$epic_number.txt" << 'EOF'
+ℹ️ Tu as accès aux serveurs MCP Dulien pour obtenir dynamiquement le contexte technique et métier.
 
 INSTRUCTIONS CRITIQUES OBLIGATOIRES:
 
@@ -374,12 +385,19 @@ EOF
         echo "PROMPT_VALIDATION_FAILED: Missing task limit instruction" >> "$WORK_DIR/temp/validation-error.txt"
     fi
     
-    # Créer un script temporaire sécurisé SANS MCP pour éviter les erreurs
+    # Créer un script temporaire avec syntaxe Claude Code correcte
     cat > "$WORK_DIR/temp/claude-cmd-$epic_number.sh" << 'EOF'
 #!/bin/bash
 WORK_DIR="/home/florian/projets/dulien-orchestration"
 EPIC_NUM="1"
-claude --print --append-system-prompt "$(cat "$WORK_DIR/temp/system-prompt-$EPIC_NUM.txt")" < "$WORK_DIR/temp/prompt-sent-$EPIC_NUM.txt"
+
+# Combiner system prompt et user prompt
+COMBINED_PROMPT="$(cat "$WORK_DIR/temp/system-prompt-$EPIC_NUM.txt")
+
+$(cat "$WORK_DIR/temp/prompt-sent-$EPIC_NUM.txt")"
+
+# Utiliser la syntaxe Claude Code correcte AVEC MCP et bypass permissions
+claude "$COMBINED_PROMPT" -p --output-format "json" --permission-mode "bypassPermissions"
 EOF
     
     # Remplacer le numéro d'épic dynamiquement
@@ -478,7 +496,7 @@ run_diagnostic_cascade() {
 EOF
     
     # Test 1: Business Context MCP seulement (avec timeout 30s)
-    local business_result=$(timeout 30 bash -c "echo '$prompt' | GITHUB_TOKEN='$GITHUB_TOKEN' claude --print \
+    local business_result=$(timeout 30 bash -c "echo '$prompt' | GITHUB_TOKEN='$GITHUB_TOKEN' claude --print --permission-mode "bypassPermissions" \
         --mcp-config '$WORK_DIR/temp/business-only.json' \
         --allowed-tools 'business_context__*' \
         2> '$WORK_DIR/temp/business-only-error-$epic_number.log'" \
@@ -489,7 +507,7 @@ EOF
     
     # Test 2: Sans MCP du tout
     log "🔍 DIAGNOSTIC CASCADE: Test sans MCP"
-    local no_mcp_result=$(echo "$prompt" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
+    local no_mcp_result=$(echo "$prompt" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print --permission-mode "bypassPermissions" \
         2> "$WORK_DIR/temp/no-mcp-error-$epic_number.log" \
         || echo "NO_MCP_FAILED")
     
@@ -907,18 +925,18 @@ execute_pending_tasks() {
     
     log "⚙️ Vérification tâches en attente..."
     
-    # Chercher tâches prêtes à exécuter (dépendances satisfaites)
+    # Chercher tâches prêtes à exécuter (statut pending uniquement)
     READY_TASKS=$(jq -r '
         . as $root |
         .epics | to_entries | .[] | 
         .value.tasks_created[] as $task |
         .value.workflow[] | 
         select(.task_id == ($task.repo + "-" + ($task.issue_number | tostring))) |
-        select(.status // "pending" == "pending") |
+        select((.status // "pending") == "pending") |
         select((.depends_on // []) | length == 0 or 
                all(. as $dep | $dep | . as $dep_id | 
                    ($root.epics | .. | objects | select(.task_id? == $dep_id) | .status? == "completed"))) |
-        {task_id: .task_id, repo: $task.repo, issue: $task.issue_number, agent: $task.agent, epic: .key}
+        {task_id: .task_id, repo: $task.repo, issue: $task.issue_number, agent: $task.agent, epic: (.key | tostring)}
     ' "$WORKFLOW_FILE")
     
     if [ -z "$READY_TASKS" ]; then
@@ -1005,8 +1023,8 @@ IMPORTANT: Utilise l'outil Bash pour créer la PR, pas MCP GitHub."
     fi
     
     # Exécuter Webapp Agent avec token GitHub App
-    WEBAPP_RESULT=$(echo "$WEBAPP_PROMPT" | GITHUB_TOKEN="$github_token" claude --print \
-        --mcp-config "$AGENTS_DIR/webapp.json" \
+    WEBAPP_RESULT=$(echo "$WEBAPP_PROMPT" | GITHUB_TOKEN="$github_token" claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es le Webapp Agent Dulien spécialisé Angular/TypeScript. Tu développes des interfaces utilisateur accessibles et performantes." \
         --add-dir "/home/florian/projets/webapp" \
         --allowed-tools "Read,Write,Edit,Bash,mcp__github__*")
@@ -1052,8 +1070,8 @@ INSTRUCTIONS:
 IMPORTANT: Respecte les patterns NestJS et la cohérence avec les APIs existantes."
 
     # Exécuter API Agent
-    API_RESULT=$(echo "$API_PROMPT" | claude --print \
-        --mcp-config "$AGENTS_DIR/$api_type.json" \
+    API_RESULT=$(echo "$API_PROMPT" | claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es l'Agent API $api_type Dulien spécialisé NestJS/TypeScript. Tu développes des APIs robustes et sécurisées." \
         --add-dir "../$repo" \
         --allowed-tools "Edit,Bash,github_create_pull_request")
@@ -1093,8 +1111,8 @@ FORMAT RAPPORT:
     fi
 
     # Exécuter Security Agent
-    SECURITY_RESULT=$(echo "$SECURITY_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
-        --mcp-config "$AGENTS_DIR/security.json" \
+    SECURITY_RESULT=$(echo "$SECURITY_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es le Security Agent Dulien. Tu audites la sécurité du code et postes des comments sur les PRs." \
         --add-dir "/home/florian/projets/webapp" \
         --allowed-tools "Read,Bash")
@@ -1129,8 +1147,8 @@ INSTRUCTIONS:
 
 IMPORTANT: Respecte les patterns Node.js et l'architecture microservices."
 
-    MAIL_RESULT=$(echo "$MAIL_PROMPT" | claude --print \
-        --mcp-config "$AGENTS_DIR/mail-server.json" \
+    MAIL_RESULT=$(echo "$MAIL_PROMPT" | claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es l'Agent Mail Server Dulien spécialisé Node.js. Tu développes des services email robustes." \
         --add-dir "../$repo" \
         --allowed-tools "Edit,Bash,mcp__github__create_pull_request")
@@ -1163,8 +1181,8 @@ INSTRUCTIONS:
 
 IMPORTANT: Optimise pour conversion et performance web."
 
-    LANDING_RESULT=$(echo "$LANDING_PROMPT" | claude --print \
-        --mcp-config "$AGENTS_DIR/landing-page.json" \
+    LANDING_RESULT=$(echo "$LANDING_PROMPT" | claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es l'Agent Landing Page Dulien spécialisé Next.js. Tu développes des pages marketing performantes." \
         --add-dir "../$repo" \
         --allowed-tools "Edit,Bash,mcp__github__create_pull_request")
@@ -1197,8 +1215,8 @@ INSTRUCTIONS:
 
 IMPORTANT: Assure haute disponibilité et scalabilité."
 
-    INFRA_RESULT=$(echo "$INFRA_PROMPT" | claude --print \
-        --mcp-config "$AGENTS_DIR/infrastructure.json" \
+    INFRA_RESULT=$(echo "$INFRA_PROMPT" | claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es l'Agent Infrastructure Dulien spécialisé DevOps. Tu configures des infrastructures robustes." \
         --add-dir "../$repo" \
         --allowed-tools "Edit,Bash,mcp__github__create_pull_request")
@@ -1264,8 +1282,8 @@ FORMAT RAPPORT:
         export GITHUB_TOKEN=$(get_github_token)
     fi
     
-    SECURITY_RESULT=$(echo "$SECURITY_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
-        --mcp-config "$AGENTS_DIR/security.json" \
+    SECURITY_RESULT=$(echo "$SECURITY_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es le Security Agent automatique. Tu postes des reviews de sécurité sur les PRs." \
         --add-dir "/home/florian/projets/$repo" \
         --allowed-tools "Read,Bash")
@@ -1306,8 +1324,8 @@ FORMAT RAPPORT:
         export GITHUB_TOKEN=$(get_github_token)
     fi
     
-    TECH_LEAD_RESULT=$(echo "$TECH_LEAD_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
-        --mcp-config "$AGENTS_DIR/tech-lead.json" \
+    TECH_LEAD_RESULT=$(echo "$TECH_LEAD_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es le Tech Lead Agent spécialisé qualité code. Tu postes des reviews techniques approfondies." \
         --add-dir "/home/florian/projets/$repo" \
         --allowed-tools "Read,Bash")
@@ -1341,8 +1359,8 @@ FORMAT RAPPORT:
 *Review automatique par RGAA Agent Dulien*"
 
     # Exécuter RGAA Agent
-    RGAA_RESULT=$(echo "$RGAA_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print \
-        --mcp-config "$AGENTS_DIR/webapp.json" \
+    RGAA_RESULT=$(echo "$RGAA_REVIEW_PROMPT" | GITHUB_TOKEN="$GITHUB_TOKEN" claude --print --permission-mode "bypassPermissions" \
+        \
         --append-system-prompt "Tu es le RGAA Agent automatique spécialisé accessibilité. Tu postes des reviews RGAA sur les PRs." \
         --add-dir "/home/florian/projets/$repo" \
         --allowed-tools "Read,Bash")

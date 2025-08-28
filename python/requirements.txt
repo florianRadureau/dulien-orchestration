@@ -1,0 +1,18 @@
+# Orchestrateur Dulien - Dépendances Python
+
+# Client Ollama pour Mistral
+ollama>=0.1.0
+
+# Logging amélioré (optionnel, stdlib suffisant)
+# colorlog>=6.7.0
+
+# Pour le développement et tests
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+
+# Note: Les outils suivants sont requis mais installés séparément :
+# - gh CLI (GitHub CLI)
+# - claude CLI (Claude Code)
+# - ollama (serveur local pour Mistral)
